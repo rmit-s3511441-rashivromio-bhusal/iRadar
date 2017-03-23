@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<title>Test Page</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+	<script src="test_code.js"></script>
+
+	<link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+	<link href='test_style.css' rel='stylesheet' type='text/css'>
+</head>
+
+<body>
+
+	<div class="container">
+		<h1>Test Page</h1>
+
+		<p>Static page to test local HTML, CSS, and JavaScript files and Bootstrap libraries.<br /></p>
+
+		<div class="row">
+			<div class="col-xs-12 col-sm-9 col-md-6">
+				<input type="text" id="email" class="form-control" placeholder="Enter an RMIT email address...">
+				<div id="fieldmsg" class="fieldmsg fieldmsg-info"></div>
+			</div>
+			<div class="col-xs-12 col-sm-3 col-md-6">
+				<button class="btn btn-primary" onclick="validateEmail()">Check</button>
+			</div>
+		</div>
+
+		<code>onclick="<span class="string">validateEmail()</span>"</code>
+
+		<div class="code_box">
+			<div class="line_numbers">
+				<div>1</div><div>2</div><div>3</div><div>4</div><div>5</div><div>6</div><div>7</div><div>8</div><div>9</div><div>10</div>
+				<div>11</div><div>12</div><div>13</div><div>14</div><div>15</div><div>16</div><div>17</div><div>18</div><div>19</div><div>20</div>
+				<div>21</div><div>22</div><div>23</div><div>24</div><div>25</div><div>26</div><div>27</div><div>28</div><div>29</div><div>30</div>
+				<div>31</div><div>32</div><div>33</div><div>34</div>
+			</div>
+			
+			<code>
+				<div><span class="keyword">function</span> validateEmail() {</div>
+				<div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">// Clear any previous messages</span></div>
+				<div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">var</span> <var>fieldmsg</var> = document.getElementById(<span class="string">'fieldmsg'</span>);</div>
+				<div>&nbsp;&nbsp;&nbsp;&nbsp;<var>fieldmsg</var>.style.display = <span class="string">'none';</span></div>
+				<div>&nbsp;&nbsp;&nbsp;&nbsp;<var>fieldmsg</var>.classList.remove(<span class="string">'fieldmsg-error'</span>);</div>
+				<div>&nbsp;&nbsp;&nbsp;&nbsp;<var>fieldmsg</var>.classList.remove(<span class="string">'fieldmsg-info'</span>);</div>
+				<div>&nbsp;&nbsp;&nbsp;&nbsp;</div>
+				<div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">var</span> <var>input</var> = document.getElementById(<span class="string">'email'</span>);</div>
+				<div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">var</span> <var>email</var> = String(<var>input</var>.value);</div>
+				<div>&nbsp;&nbsp;&nbsp;&nbsp;</div>
+				<div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">// Check for input</span></div>
+   				<div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span> (!<var>email</var>)</div>
+				<div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span>;</div>
+				<div>&nbsp;&nbsp;&nbsp;&nbsp;</div>
+				<div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">// Ensure input is lowercase</span></div>
+				<div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">var</span> <var>lowercase</var> = <var>email</var>.toLowerCase();</div>
+   				<div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span> (<var>email</var> != <var>lowercase</var>) {</div>
+				<div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<var>input</var>.value = <var>lowercase</var>;</div>
+				<div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<var>email</var> = <var>lowercase</var>;</div>
+				<div>&nbsp;&nbsp;&nbsp;&nbsp;}</div>
+				<div>&nbsp;&nbsp;&nbsp;&nbsp;</div>
+				<div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">// Validate input</span></div>
+   				<div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span> (<var>email</var>.match(<span class="regex">/^s[0-9]{7}\@student\.rmit\.edu\.au$/</span>) != <span class="null">null</span>) {</div>
+				<div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<var>fieldmsg</var>.classList.add(<span class="string">'fieldmsg-info'</span>);</div>
+				<div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<var>fieldmsg</var>.innerHTML = <span class="string">'Valid RMIT student email address'</span>;</div>
+				<div>&nbsp;&nbsp;&nbsp;&nbsp;} <span class="keyword">else if</span> (<var>email</var>.match(<span class="regex">/^[a-z]+\.[a-z]+\@rmit\.edu\.au$/</span>) != <span class="null">null</span>) {</div>
+				<div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<var>fieldmsg</var>.classList.add(<span class="string">'fieldmsg-info'</span>);</div>
+				<div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<var>fieldmsg</var>.innerHTML = <span class="string">'Valid RMIT staff email address'</span>;</div>
+				<div>&nbsp;&nbsp;&nbsp;&nbsp;} <span class="keyword">else</span> {</div>
+				<div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<var>fieldmsg</var>.classList.add(<span class="string">'fieldmsg-error'</span>);</div>
+				<div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<var>fieldmsg</var>.innerHTML = <span class="string">'Invalid RMIT email address'</span>;</div>
+				<div>&nbsp;&nbsp;&nbsp;&nbsp;}</div>
+				<div>&nbsp;&nbsp;&nbsp;&nbsp;<var>fieldmsg</var>.style.display = <span class="string">'block'</span>;</div>
+				<div>}</div>
+			</code>
+		</div>
+
+		<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla luctus est mi, at elementum nisl imperdiet non. Donec nec ligula eleifend, congue quam ac, finibus eros. Sed lobortis porta scelerisque. Aliquam porta quam at blandit aliquet. Sed quis sollicitudin elit, in eleifend mi. Phasellus viverra, metus et suscipit lacinia, sem est sollicitudin lorem, non sodales enim diam a ante. Vestibulum convallis faucibus mi. In hac habitasse platea dictumst. Praesent blandit feugiat augue et tincidunt. Etiam vehicula elementum risus a imperdiet. Curabitur at diam ut tellus pulvinar congue. Nunc sed dolor quis eros vulputate placerat. Nullam nisi enim, bibendum vitae lectus sed, fermentum dapibus mi. Mauris tempor orci ut metus cursus tincidunt.</p>
+
+		<p>Mauris egestas est est, vitae hendrerit purus imperdiet non. Vestibulum viverra tincidunt ultrices. Nam risus dui, pellentesque id tincidunt id, maximus non erat. Aliquam nunc dolor, tincidunt tincidunt nisl sed, sollicitudin tristique mi. Etiam vel magna ut felis luctus rhoncus. Etiam vitae sagittis nisi. Nunc sed neque fermentum, faucibus est non, vehicula risus. Maecenas volutpat vel eros vitae vulputate. Phasellus et fermentum est, id hendrerit nisi. Nulla blandit, ligula at mattis fringilla, eros tortor commodo turpis, eget porta urna ligula vitae mauris.</p>
+	
+		<p>Nunc tincidunt est a elit accumsan, cursus pretium leo faucibus. Vivamus at ante ultrices, convallis turpis vel, mollis diam. Donec dui urna, pharetra eget tortor ut, tincidunt ultricies sem. Fusce vel mi ut ante semper commodo. Pellentesque id magna lacus. Donec nisi sapien, egestas eu nunc sed, auctor lobortis leo. Ut at elit lorem. Sed tincidunt urna et metus commodo, sed varius felis gravida. Nunc mattis sit amet massa in pretium. Nullam in sapien mattis, sodales ligula ut, vestibulum risus. Duis condimentum fringilla augue et dignissim. Nam convallis diam ut ligula tempus tincidunt. Fusce pharetra nunc a massa feugiat accumsan. Maecenas tempus sapien feugiat scelerisque feugiat. Ut placerat euismod sapien ut bibendum.</p>
+	</div>
+
+</body>
+</html>

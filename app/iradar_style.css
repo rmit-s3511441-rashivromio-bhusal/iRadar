@@ -1,0 +1,85 @@
+header {
+    height: 120px;
+    background-color: white;
+    padding: 5px;
+}
+header img {
+    height: 100px;
+    margin: 0px 0px 0px 100px;
+}
+nav {
+    margin: 70px 100px 0px 0px;
+}
+nav ul {
+    list-style: none;
+}
+nav li {
+    color: gray;
+    float: left;
+    font-size: 18pt;
+    font-weight: bold;
+    padding: 0px 20px;
+}
+a, a:visited, a:hover {
+    color: gray;
+}
+
+
+main {
+    background-color: rgb(236,236,236);
+    padding: 50px;
+}
+h2 {
+    color: gray;
+    text-align: center;
+    font-size: 24pt;
+}
+.brand {
+    color: rgb(63,152,212);
+}
+#tiles {
+    overflow: hidden;
+    height: 200px;
+    width: 1050px;
+    display: table;
+    margin: 50px auto;
+}
+.tile {
+    width: 350px;
+    float: left;
+    text-align: center;
+}
+.tile img {
+    height: 150px;
+    width: 200px;
+    border: 1px solid transparent;
+    border-radius: 7px;
+}
+tile h3 {
+    
+}
+
+footer {
+   text-align: center;
+    padding: 20px;
+}
+footer h4 {
+    color: white;
+    font-size: 22pt;
+    text-decoration: underline;
+}
+footer ul {
+    list-style: none;
+    padding-left: 0px;
+    text-align: left;
+    display: inline-block;
+}
+footer li {
+    color: lightgrey;
+    font-size: 18pt;
+}
+
+
+body {
+    background-color: rgb(63,152,212);
+}
