@@ -2,9 +2,9 @@
   "name": "iRadar",
   "version": "1.0.0",
   "description": "iRadar web portal v1",
-  "main": "index.js",
+  "main": "app/app.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node app/app.js"
   },
   "author": "Geoffrey Sage",
   "license": "ISC",
