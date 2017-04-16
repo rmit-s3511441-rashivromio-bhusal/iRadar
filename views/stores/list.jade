@@ -1,0 +1,28 @@
+extends ../header.jade
+
+block content
+  input(type="hidden", id="token", value="#{token}")
+  
+  .container-fluid
+    h3 Stores
+    .table.table-responsive
+      table.table.table-striped.table-bordered
+        tr
+          th
+            span.glyphicon.glyphicon-cog
+          th Name
+          th Device Count
+          th Active
+        
+        each store in entities
+          tr
+            td
+              input(type="checkbox")
+            td
+              a(href="/stores/#{store.id}/edit")= store.name
+            td= store.devices_count
+            if store.active
+              td Yes
+            if !store.active
+              td No
+      

@@ -1,0 +1,38 @@
+extends ../header.jade
+
+block content
+  input(type="hidden", id="token", value="#{token}")
+  
+  .container-fluid
+    .table.table-responsive
+      table.table.table-striped.table-bordered
+        tr
+          th
+            span.glyphicon.glyphicon-cog
+          th ID
+          th Name
+          th Proximity
+          th Store
+          th Beacon
+          th Start
+          th End
+          th Active
+        
+        each special in entities
+          tr
+            td
+              input(type="checkbox")
+            td
+              a(href="/specials/#{special.id}/edit")= special.id
+            td= special.name
+            td= special.proximity
+            td= special.store
+            td= special.beacon
+            td= special.start
+            td= special.end
+            if special.active
+              td= Yes
+            if !special.active
+              td= No
+      
+            

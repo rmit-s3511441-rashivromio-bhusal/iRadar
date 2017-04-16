@@ -1,0 +1,63 @@
+doctype html
+html(lang="en")
+  head
+    title #{pageTitle}
+    meta(charset='utf-8')
+    meta(name="viewport", content="width=device-width, initial-scale=1")
+    link(rel="stylesheet", href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css")
+    script(src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js")
+    script(src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js")
+    link(rel="stylesheet", href="https://iradar-dev.appspot.com/style.css")
+    
+    // favicon stuff
+    link(rel="apple-touch-icon", sizes="180x180", href="https://iradar-dev.appspot.com/apple-touch-icon.png")
+    link(rel="icon", type="image/png", href="https://iradar-dev.appspot.com/favicon-32x32.png", sizes="32x32")
+    link(rel="icon", type="image/png", href="https://iradar-dev.appspot.com/favicon-16x16.png", sizes="16x16")
+    link(rel="manifest", href="https://iradar-dev.appspot.com/manifest.json")
+    link(rel="mask-icon", href="https://iradar-dev.appspot.com/safari-pinned-tab.svg", color="#283593")
+    meta(name="theme-color", content="#ffffff")
+    
+  body(id="#{pageId}")
+    .navbar.navbar-default
+      .navbar-header
+        .navbar-brand
+          a(href="/home")
+            img(src="https://iradar-dev.appspot.com/iRadarLogo.png", alt="iRadar Logo")
+            
+      ul.nav.navbar-nav
+        li
+          a(href="/beacons") Beacons
+        li
+          a(href="/specials") Specials
+        li
+          a(href="/users") Users
+        if isAdmin
+          li
+            a(href="/stores") Stores
+        li
+          a(href="/reports") Reports
+        if isAdmin
+          li
+            a(href="/admin") Admin
+        li
+          a(href="/logout") Log out
+        if isAdmin
+          li
+            a(href="/kontakt/beacons") Import Beacons
+        if isAdmin
+          li
+            a(href="/kontakt/specials") Import Specials
+        if isAdmin
+          li
+            a(href="/kontakt/stores") Import Stores
+        
+      
+      if name
+        a.nav.pull-right(id="avatar", href="https://iradar-dev.appspot.com/users/#{id}/edit")
+          if image
+            img(src="#{image}", alt="#{name}")
+          if !image
+            span.initials #{initials}
+          span.name #{name}
+    
+    block content    

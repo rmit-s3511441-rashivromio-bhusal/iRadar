@@ -1,0 +1,60 @@
+extends ../header.jade
+
+block content
+  .container
+    h3 Beacon
+    form(method="POST")
+      .form-group
+        label(for="unique_id") Unique ID
+        input.form-control(type="text", name="unique_id", id="unique_id", disabled="disabled", value="#{entity.unique_id}")
+      .form-group
+        label(for="store") Store
+        input.form-control(type="text", name="store", id="store", disabled="disabled", value="#{entity.store}")
+      .form-group
+        label(for="alias") Location
+        input.form-control(type="text", name="alias", id="alias", value="#{entity.alias}")
+      .form-group
+        label(for="uuid") UUID
+        input.form-control(type="text", name="uuid", id="uuid", disabled="disabled", value="#{entity.uuid}")
+      .form-group
+        label(for="major") Major
+        input.form-control(type="text", name="major", id="major", disabled="disabled", value="#{entity.major}")
+      .form-group
+        label(for="minor") Minor
+        input.form-control(type="text", name="minor", id="minor", disabled="disabled", value="#{entity.minor}")
+      .form-group
+        button.btn.btn-success(type="submit") Save
+
+  .container.related-list
+    h3 Specials
+    .table.table-responsive
+      table.table.table-striped.table-bordered
+        tr
+          th
+            span.glyphicon.glyphicon-cog
+          th ID
+          th Name
+          th Proximity
+          th Start
+          th End
+          th Active
+        
+        each special in entities
+          tr
+            td
+              input(type="checkbox")
+            td
+              a(href="/specials/#{special.id}/edit")= special.id
+            td= special.name
+            td= special.proximity
+            td= special.start
+            td= special.end
+            if special.active
+              td= Yes
+            if !special.active
+              td= No
+      
+        if !entities.length
+          tr
+            td(colspan="7") No Specials found.
+    

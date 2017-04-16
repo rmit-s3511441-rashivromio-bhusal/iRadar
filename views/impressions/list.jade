@@ -1,0 +1,25 @@
+extends ../header.jade
+
+block content
+  input(type="hidden", id="token", value="#{token}")
+  
+  .container-fluid
+    h3 Impressions
+    .table.table-responsive
+      table.table.table-striped.table-bordered
+        tr
+          th
+            span.glyphicon.glyphicon-cog
+          th Beacon
+          th Special
+          th Customer
+          th Created on
+        
+        each impression in entities
+          tr
+            td
+              input(type="checkbox")
+            td= impression.beacon
+            td= impression.special
+            td= impression.customer
+            td= impression.created_on

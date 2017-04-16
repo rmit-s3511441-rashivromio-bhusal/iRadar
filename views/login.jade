@@ -1,0 +1,27 @@
+doctype html
+html(lang="en")
+  head
+    title iRadar Login
+    meta(charset='utf-8')
+    meta(name="viewport", content="width=device-width, initial-scale=1")
+    link(rel="stylesheet", href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css")
+    script(src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js")
+    script(src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js")
+    link(rel="stylesheet", href="style.css")
+    script(src="login.js")
+    
+  body(id="login")
+    .container-extra
+      div(id="login-box")
+        div(id="logo-box")
+          img(src="iRadarLogo.png", alt="iRadar Logo", id="logo")
+        form
+          .form-group
+            label.control-label(for="user_name") Username
+            input.form-control(type="text", name="user_name", id="user_name")
+          .form-group
+            label.control-label(for="password") Password
+            input.form-control(type="password", name="password", id="password")
+          .alert.alert-danger(id="alert-login")
+          button.btn.btn-primary.btn-block(type="button", onclick="login()", id="btn-login") Login
+          

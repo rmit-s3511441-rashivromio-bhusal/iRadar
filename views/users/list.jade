@@ -1,0 +1,45 @@
+extends ../header.jade
+
+block content
+  input(type="hidden", id="token", value="#{token}")
+  
+  .container-fluid
+    .table.table-responsive
+      table.table.table-striped.table-bordered
+        tr
+          th
+            span.glyphicon.glyphicon-cog
+          th ID
+          th First name
+          th Last name
+          th Username
+          th Email
+          th Avatar
+          th Last login
+          th Active
+          
+        each user in entities
+          tr
+            td
+              input(type="checkbox")
+            td
+              a(href="/users/#{user.id}/edit")= user.id
+            td= user.first_name
+            td= user.last_name
+            td= user.user_name
+            td= user.email
+            if user.image
+              td
+                img(src="#{user.image}", height="40", width="40", style="border: 1px solid transparent; border-radius: 20px;")
+            if !user.image
+              td= user.image
+            td= user.last_login
+            if user.active
+                td Yes
+            if !user.active
+                td No
+            
+        if !entities.length
+          tr
+            td(colspan="9") No Users found
+            

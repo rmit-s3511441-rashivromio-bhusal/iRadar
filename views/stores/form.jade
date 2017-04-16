@@ -1,0 +1,50 @@
+extends ../header.jade
+
+block content
+  .container
+    h3 Store
+    form(method="POST")
+      .form-group
+        label(for="name") Name
+        input.form-control(type="text", name="name", id="name", value="#{entity.name}")
+      .form-group
+        label(for="devices_count") Count of Beacons
+        input.form-control(type="text", name="devices_count", id="devices_count", disabled="disabled", value="#{entity.devices_count}")
+      .form-group
+        label(for="description") Description
+        textarea.form-control(name="description", id="description")= entity.description
+      if entity.active
+        .form-group
+          label(for="active") Active
+            input.form-control(type="checkbox", name="active", id="active", checked="checked", disabled="disabled")
+      if !entity.active
+        .form-group
+          label(for="active") Active
+            input.form-control(type="checkbox", name="active", id="active", disabled="disabled")
+      .form-group
+        button.btn.btn-success(type="submit") Save
+
+  .container.related-list
+    .table.table-responsive
+      table.table.table-striped.table-bordered
+        tr
+          th
+            span.glyphicon.glyphicon-cog
+          th Unique ID
+          th Store
+          th Location
+          th UUID
+          th Major
+          th Minor
+        
+        each beacon in entities
+          tr
+            td
+              input(type="checkbox")
+            td
+              a(href="/beacons/#{beacon.id}/edit")= beacon.unique_id
+            td= beacon.store
+            td= beacon.alias
+            td= beacon.uuid
+            td= beacon.major
+            td= beacon.minor
