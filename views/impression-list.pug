@@ -1,0 +1,22 @@
+include header.pug
+include list-header.pug
+.container.list-view
+  .table.table-responsive
+    table.table.table-striped.table-bordered
+      tr
+        th.cbc
+        th Beacon
+        th Special
+        th Customer
+        th Created on
+        
+      each impression in entities
+        tr
+          td.cbc
+            input.list-selector(type="checkbox", data-for=impression.id, onclick="listSelectorToggled()")
+          td.filter(data-filter=`beacon=${impression.beacon}`)= impression.beacon
+          td.filter(data-filter=`special=${impression.special}`)= impression.special
+          td.filter(data-filter=`customer=${impression.customer}`)= impression.customer
+          td.filter(data-filter=`created_on=${impression.created_on}`)= impression.created_on
+
+include list-footer.pug

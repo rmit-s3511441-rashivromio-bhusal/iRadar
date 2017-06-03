@@ -1,0 +1,12 @@
+ul.pagination.pull-right
+  if pages && pages.length
+    each page in pages
+      if page.active
+        li.active
+          a(href="javascript:void(0);")= page.num
+      else
+        li
+          a(href="javascript:void(0);", onclick=`setParameter('start', ${page.start})`)= page.num
+  else
+    li.active
+      a(href="javascript:void(0);", onclick="setParam('start', 1)") 1

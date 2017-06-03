@@ -1,0 +1,92 @@
+.form-group(id=`${field.name}.group`)
+  if field.isMandatory && !field.isDisabled
+    label.mandatory(for=field.name)= field.label
+  else
+    label(for=field.name)= field.label
+    
+  if field.type == 'String'
+    if field.isDisabled
+      input.form-control(type="text", name=field.name, id=field.name, disabled="disabled", value=field.value)
+    else
+      if field.isMandatory
+        input.form-control(type="text", name=field.name, id=field.name, value=field.value, onchange=`validateString(\'${field.name}\',\'${field.label}\')`)
+      else
+        input.form-control(type="text", name=field.name, id=field.name, value=field.value)
+  
+  if field.type == 'Textarea'
+    if field.isDisabled
+      textarea.form-control(name=field.name, id=field.name, rows="6", disabled="disabled")= field.value
+    else
+      if field.isMandatory
+        textarea.form-control(name=field.name, id=field.name, rows="6", onchange=`validateString(\'${field.name}\',\'${field.label}\')`)= field.value
+      else
+        textarea.form-control(name=field.name, id=field.name, rows="6")= field.value
+
+  if field.type == 'Password'
+    input.form-control(type="password", name=field.name, id=field.name, value=field.value, onchange="validatePassword()")
+    
+  if field.type == 'Email'
+    if field.isDisabled
+      input.form-control(type="text", name=field.name, id=field.name, disabled="disabled", value=field.value)
+    else
+      input.form-control(type="text", name=field.name, id=field.name, value=field.value, onchange=`validateEmail(\'${field.name}\',\'${field.label}\',${field.isMandatory})`)
+
+  if field.type == 'URL'
+    if field.isDisabled
+      input.form-control(type="text", name=field.name, id=field.name, disabled="disabled", value=field.value)
+    else
+      input.form-control(type="text", name=field.name, id=field.name, value=field.value, onchange=`validateURL(\'${field.name}\',\'${field.label}\',${field.isMandatory})`)
+
+  if field.type == 'Boolean'
+    if field.value
+      input.form-control(type="checkbox", name=field.name, id=field.name, style="width:34px;margin-top:0px;", checked="checked")
+    else
+      input.form-control(type="checkbox", name=field.name, id=field.name, style="width:34px;margin-top:0px;")
+  
+  if field.type == 'DateTime'
+    if field.isDisabled
+      input.form-control(type="text", name=field.name, id=field.name, value=field.value, disabled="disabled")
+    else
+      .input-group.date(id=`dtp-${field.name}`)
+        if field.isMandatory
+          input.form-control(type="text", name=field.name, id=field.name, value=field.value, onchange=`validateString(\'${field.name}\',\'${field.label}\')`)
+        else
+          input.form-control(type="text", name=field.name, id=field.name, value=field.value)
+        span.input-group-addon
+          span.glyphicon.glyphicon-calendar
+      - var js = `$(function () { $('#dtp-${field.name}').datetimepicker({ locale: 'en-au', format: 'DD-MM-YYYY HH:mm:ss' }); });`;
+      script(type="text/javascript")= js
+
+  if field.type == 'Select'
+    if field.isDisabled
+      select.form-control(name=field.name, id=field.name, disabled="disabled")
+        include input-options.pug
+    else
+      if field.isMandatory
+        select.form-control(name=field.name, id=field.name, onchange=`validateString(\'${field.name}\',\'${field.label}\')`)
+          include input-options.pug
+      else
+        select.form-control(name=field.name, id=field.name)
+          include input-options.pug
+          
+  if field.type == 'ForeignKey'
+    .input-group
+      if field.isDisabled
+        select.form-control(name=field.name, id=field.name, disabled="disabled")
+          include input-options.pug
+      else
+        if field.isMandatory
+          select.form-control(name=field.name, id=field.name, onchange=`validateString(\'${field.name}\',\'${field.label}\')`)
+            include input-options.pug
+        else
+          select.form-control(name=field.name, id=field.name)
+            include input-options.pug
+      span.input-group-btn
+        a.btn.btn-secondary(href=field.path, title=`Open ${field.kind}`)
+          span(class=`glyphicon glyphicon-${field.icon}`)
+
+    
+  .alert.alert-danger.fld-msg(id=`${field.name}.msg`)
+  
+  if field.type == 'URL' && field.value
+    img.field-image(src=field.value)

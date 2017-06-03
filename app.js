@@ -9,7 +9,7 @@ const app           = express();
 
 app.disable('etag'); // Disable HTTP ETag
 app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'jade');
+app.set('view engine', 'pug');
 app.set('trust proxy', true);
 
 // Static content
@@ -34,14 +34,13 @@ app.use(function (request, response, next) {
 
 app.use('/api',          require('./routes/api-router'));
 app.use('/beacons',      require('./routes/beacons'));
-//app.use('/specials', require('./routes/crud-methods')('Special', 'name'));
-//app.use('/stores',   require('./routes/crud-methods')('Store', 'name'));
 app.use('/specials',     require('./routes/specials'));
 app.use('/stores',       require('./routes/stores'));
 app.use('/users',        require('./routes/users'));
 app.use('/reports',      require('./routes/reports'));
 app.use('/authenticate', require('./routes/authenticate'));
 app.use('/kontakt',      require('./routes/kontakt'));
+app.use('/impressions',  require('./routes/impressions'));
 
 app.get('/', (request, response) => {
     response.redirect('/home');
@@ -52,15 +51,18 @@ app.get('/home', (request, response) => {
     
     if (request.session && request.session.id) {
         console.log('session.id: ' + request.session.id);
-        response.render('home.jade', {
+        response.render('home.pug', {
             pageTitle: "iRadar - Home",
             pageId   : "home",
-            token    : request.session.token,
-            id       : Number(request.session.id),
-            image    : request.session.image,
-            name     : request.session.name,
-            initials : request.session.initials,
-            isAdmin  : request.session.name == 'Geoffrey Sage'
+            user     : {
+                id       : String(request.session.id),
+                name     : String(request.session.name),
+                initials : String(request.session.initials),
+                image    : String(request.session.image),
+                role     : String(request.session.role),
+                store    : String(request.session.store),
+                token    : String(request.session.token)
+            }
         });
     } else {
         response.redirect('/login');
@@ -68,7 +70,7 @@ app.get('/home', (request, response) => {
 });
 
 app.get('/login', (request, response) => {
-    response.render('login.jade');
+    response.render('login.pug');
 });
 
 app.get('/logout', (request, response) => {
@@ -78,7 +80,19 @@ app.get('/logout', (request, response) => {
 
 // Basic 404 handler
 app.use((request, response) => {
-    response.status(404).render('404.jade');
+    response.status(404).render('404.pug', {
+        pageTitle: "iRadar - 404",
+        pageId   : "404",
+        user     : {
+            id       : String(request.session.id),
+            name     : String(request.session.name),
+            initials : String(request.session.initials),
+            image    : String(request.session.image),
+            role     : String(request.session.role),
+            store    : String(request.session.store),
+            token    : String(request.session.token)
+        }
+    });
 });
 
 // Basic error handler
@@ -87,7 +101,7 @@ app.use((err, request, response, next) => {
     
     // If our routes specified a specific response, then send that. Otherwise,
     // send a generic message so as not to leak anything.
-    response.status(500).send(err.response || '<p>Something broke!</p><p>Possibly jade could not render the .jade file. Try debugging the template.</p>');
+    response.status(500).send(err.response || '<p>Something broke!</p><p>Possibly pug could not render the .pug file. Try debugging the template.</p>');
 });
 
 if (module === require.main) {

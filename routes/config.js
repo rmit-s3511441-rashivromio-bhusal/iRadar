@@ -8,7 +8,7 @@ module.exports = {
     
     "cookie": {
         "name": "session",
-        "maxAge": oneHour * 4, /* How long the session stays alive after each transaction */
+        "maxAge": oneHour * 8, /* How long the session stays alive after each transaction */
         "key": "A$QpzG^vjWvTfcS2$tr^5K!u"
     },
     

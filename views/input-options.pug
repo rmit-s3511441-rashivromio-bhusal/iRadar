@@ -1,0 +1,10 @@
+if !field.value
+  option(value="", selected="selected") -- Select --
+else
+  option(value="") -- Select --
+if field.options
+  each option in field.options
+    if field.value == option.value
+      option(value=option.value, selected="selected")= option.label
+    else
+      option(value=option.value)= option.label

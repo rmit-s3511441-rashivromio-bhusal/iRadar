@@ -1,0 +1,17 @@
+.row
+  .col-xs-12
+    .form-group
+      button.btn.btn-success(type="submit") Save
+      if isAdmin && !isNew
+        // Modal to confirm delete
+        button.btn.btn-danger.pull-right(type="button", data-toggle="modal", data-target="#deleteModal") Delete
+        .modal.fade(id="deleteModal", tabindex="-1", role="dialog")
+          .modal-dialog(role="document")
+            .modal-content
+              .modal-header
+                h5.modal-title= `Delete ${kind}`
+              .modal-body
+                p= `Are you sure you want to delete this ${kind}?`
+              .modal-footer
+                button.btn.btn-secondary(type="button", data-dismiss="modal") No, Cancel
+                a.btn.btn-danger(href=`/${pageId}s/${entity.id}/delete`) Yes, Delete

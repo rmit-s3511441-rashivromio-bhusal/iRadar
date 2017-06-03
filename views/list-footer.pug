@@ -1,0 +1,57 @@
+// List Footer
+.container.list-footer
+  if bulkFields || canDelete
+    .pull-left(id="cbc-all-div")
+      input(type="checkbox", id="cbc-all", onclick="selectList()")
+  if bulkFields
+    button.btn.btn-warning.pull-left(type="button", data-toggle="modal", data-target="#bulkUpdateModal") Update
+  if canDelete
+    button.btn.btn-danger.pull-left(type="button", data-toggle="modal", data-target="#bulkDeleteModal") Delete
+  include list-pagination.pug
+  .input-group.pull-right(id="show-rows-group")
+    span Show
+    select.input-sm(id="show-rows", onchange="showRows(this.value)")
+      if rows == 10
+        option(value="10", selected="selected") 10
+      else
+        option(value="10") 10
+      if !rows || rows == 20
+        option(value="20", selected="selected") 20
+      else
+        option(value="20") 20
+      if rows == 50
+        option(value="50", selected="selected") 50
+      else
+        option(value="50") 50
+      if rows == 100
+        option(value="100", selected="selected") 100
+      else
+        option(value="100") 100
+    span rows
+script(src="https://iradar-dev.appspot.com/contextMenus.js")
+
+if bulkFields && bulkFields.length
+  .modal.fade(id="bulkUpdateModal", tabindex="-1", role="dialog")
+    .modal-dialog(role="document")
+      .modal-content
+        .modal-body
+          h5.modal-title= `Update ${kind}s`
+          form(method="POST", action=`/${pageId}/bulk-update`)
+            input(type="hidden", id="bulkList", name="bulkList")
+            each field in bulkFields
+              include input.pug
+            button.btn.btn-primary(type="submit") Update
+            button.btn.btn-secondary.pull-right(type="button", data-dismiss="modal") Cancel
+
+if canDelete
+  .modal.fade(id="bulkDeleteModal", tabindex="-1", role="dialog")
+    .modal-dialog(role="document")
+      .modal-content
+        .modal-body
+          h5.modal-title= `Delete ${kind}s`
+          form(method="POST", action=`/${pageId}/bulk-delete`)
+            p Are you sure you want to delete these records?
+            input(type="hidden", id="bulkList2", name="bulkList2")
+            button.btn.btn-danger(type="submit") Yes, Delete
+            button.btn.btn-secondary.pull-right(type="button", data-dismiss="modal") No, Cancel
+// End List Footer

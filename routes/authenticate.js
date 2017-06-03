@@ -39,20 +39,7 @@ router.get('/', (request, response) => {
         return;
     }
     
-    /*/ Look up the User
-    const Datastore = require('@google-cloud/datastore');
-    const ds = Datastore({ 
-        projectId: String(config.projectId)
-    });
-    
-    var query = ds.createQuery('User')
-        .filter('active', '=', true)
-        .filter('user_name', '=', username);
-    
-    ds.runQuery(query, (err, entities, nextQuery) => {
-    */
     var filters = [['active', true],['user_name', username]];
-    
     model.query('User', filters, function callback (err, entities) {
         console.log('callback('+err+', '+entities+')');
         try {
@@ -67,7 +54,7 @@ router.get('/', (request, response) => {
         }
         
         var user;
-        if (entities[0]) {
+        if (entities && entities[0]) {
             user = entities[0];
         }
         
@@ -88,18 +75,6 @@ router.get('/', (request, response) => {
                 console.log('hash: ' + hash);
         });
         */
-        
-        try {
-            console.log('toISOString: ' + user.last_login.toISOString());
-            console.log('getTimezoneOffset: ' + user.last_login.getTimezoneOffset());
-            console.log('sys.getDateTime: ' + sys.getDateTime(user.last_login));
-            //var d = sys.addTimeZoneOffset(user.last_login);
-            //console.log('sys.addTimeZoneOffset: ' + sys.getDateTime(d));
-            
-        } catch (ex) {
-            console.log(ex);
-        }
-        
         
         if (user.locked_out) {
             response.status(401).json({
@@ -139,7 +114,7 @@ router.get('/', (request, response) => {
                     "expiresIn": "12h"
                 };
                 var token = jwt.sign(payload, config.tokenSecret, options);
-                console.log('token: ' + token);
+                //console.log('token: ' + token);
                 
                 if (!request.session) {
                     request.session = {};
@@ -147,19 +122,20 @@ router.get('/', (request, response) => {
                 
                 request.session.id       = Number(user.id);
                 request.session.name     = user.first_name + ' ' + user.last_name;
-                request.session.initials = user.first_name.charAt(0) + user.last_name.charAt(0);
-                request.session.image    = user.image || null;
+                request.session.initials = String(user.first_name.charAt(0) + user.last_name.charAt(0));
+                request.session.image    = String(user.image) || null;
                 request.session.token    = token;
-                request.session.role     = user.name == 'Geoffrey Sage' ? 'admin' : 'standard';
+                request.session.role     = String(user.role);
+                request.session.store    = String(user.store);
                 
                 response.status(200).json({
                     "authenticated": true,
                     "token": token
                 });
                 
-                model.update('User', user.id, {
-                    last_login: new Date()
-                }, function(err, entity){
+                var data = { last_login: String(sys.getNow()) };
+                
+                model.update('User', user.id, data, user.id, function(err, entity) {
                     // noop
                 });
                 

@@ -1,0 +1,28 @@
+h1= title
+// List Header
+.container.list-header
+  .floats
+    if canCreate
+      a.btn.btn-warning.pull-left(href=`/${pageId}/add`) New
+    if pageId == 'beacons'
+      a.btn.btn-warning.pull-left(href="/kontakt/beacons") Import
+    .input-group.search-group.pull-left
+      span.input-group-select
+        select.form-control(id="search-group-select")
+          if searchFields && searchFields.length
+            each field in searchFields
+              option(value=field.name)= field.label
+      input.form-control(type="text", id="search", placeholder="Search...")
+      span.input-group-btn
+        button.btn.btn-default(id="search-group-btn", type="button", onclick="search()") Search
+    include list-pagination.pug
+    div.pull-right(id="row-counts") 
+      | Showing 
+      b= start
+      |  to 
+      b= end
+      |  of 
+      b= count
+      |  rows
+  include list-filters.pug
+// End List Header

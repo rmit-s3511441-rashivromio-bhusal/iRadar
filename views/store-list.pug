@@ -1,0 +1,23 @@
+include header.pug
+include list-header.pug
+.container.list-view
+  .table.table-responsive
+    table.table.table-striped.table-bordered
+      tr
+        th.cbc
+        th Name
+        th Description
+        th Active
+        th Updated on
+          
+      each store in stores
+        tr
+          td.cbc
+            input.list-selector(type="checkbox", data-for=store.id, onclick="listSelectorToggled()")
+          td.filter(data-filter=`name=${store.name}`)
+            a(href=`/stores/${store.id}/edit`)= store.name
+          td.filter(data-filter=`description=${store.description}`)!= store.description_dv
+          td.filter(data-filter=`active=${store.active}`)= store.active_dv
+          td.filter(data-filter=`updated_on=${store.updated_on}`)= store.updated_on_dv
+
+include list-footer.pug

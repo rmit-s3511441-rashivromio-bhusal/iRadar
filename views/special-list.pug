@@ -1,0 +1,33 @@
+include header.pug
+include list-header.pug
+.container.list-view
+  .table.table-responsive
+    table.table.table-striped.table-bordered
+      tr
+        th.cbc
+        th Name
+        th Proximity
+        th Store
+        th Beacon
+        th Start
+        th End
+        th Active
+        th Updated on
+        
+      each special in specials
+        tr
+          td.cbc
+            input.list-selector(type="checkbox", data-for=special.id, onclick="listSelectorToggled()")
+          td.filter(data-filter=`name=${special.name}`)
+            a(href=`/specials/${special.id}/edit`)= special.name
+          td.filter(data-filter=`proximity=${special.proximity}`)= special.proximity
+          td.filter(data-filter=`store=${special.store}`)
+            a(href=`/stores/${special.store}/edit`)= special.store_dv
+          td.filter(data-filter=`beacon=${special.beacon}`)
+            a(href=`/beacons/${special.beacon}/edit`)= special.beacon_dv
+          td.filter(data-filter=`start=${special.start}`)= special.start_dv
+          td.filter(data-filter=`end=${special.end}`)= special.end_dv
+          td.filter(data-filter=`active=${special.active}`)= special.active_dv
+          td.filter(data-filter=`updated_on=${special.updated_on}`)= special.updated_on_dv
+
+include list-footer.pug

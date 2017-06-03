@@ -4,6 +4,7 @@ module.exports = function (kind, orderBy) {
     const express    = require('express');
     const router     = express.Router();
     const model      = require('./model');
+    const userId     = '5692462144159744'; // Rashiv
     
     router.use(bodyParser.json());
     
@@ -36,7 +37,9 @@ module.exports = function (kind, orderBy) {
             return;
         }
         
-        model.create(kind, request.body, (err, entity) => {
+        console.log('POST - kind: ' + kind + ', data: ' + request.body + ', userId: ' + userId);
+        
+        model.create(kind, request.body, userId, (err, entity) => {
             if (err) {
                 next(err);
                 return;
@@ -63,7 +66,7 @@ module.exports = function (kind, orderBy) {
         var id   = request.params.id;
         var data = request.body;
         
-        model.update(kind, id, data, (err, entity) => {
+        model.update(kind, id, data, userId, (err, entity) => {
             if (err) {
                 next(err);
                 return;

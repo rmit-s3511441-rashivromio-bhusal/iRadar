@@ -1,0 +1,12 @@
+include header.pug
+.container.form-container
+  h3= kind
+  form(method="POST", onsubmit="return validateUser()")
+    .row
+      .col-sm-6.col-xs-12
+        each field in col1
+          include input.pug
+      .col-sm-6.col-xs-12
+        each field in col2
+          include input.pug
+    include save-delete.pug

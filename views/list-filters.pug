@@ -1,0 +1,7 @@
+ol.breadcrumb
+  li.breadcrumb-item
+    a(href=`/${pageId}`) All
+  if crumbs && crumbs.length
+    each crumb in crumbs
+      li.breadcrumb-item
+        a(href=crumb.url)= crumb.label

@@ -1,0 +1,38 @@
+include header.pug
+.container.form-container
+  h3= kind
+  form(method="POST", onsubmit="return validateBeacon()")
+    .row
+      .col-sm-6.col-xs-12
+        each field in col1
+          include input.pug
+      .col-sm-6.col-xs-12
+        each field in col2
+          include input.pug
+    include save-delete.pug
+
+.container.related-list.form-container
+  h3 Specials
+  .table.table-responsive
+    table.table.table-striped.table-bordered
+      tr
+        th Name
+        th Proximity
+        th Start
+        th End
+        th Updated on
+        
+      each special in specials
+        tr
+          td
+            a(href=`/specials/${special.id}/edit`)= special.name
+          td= special.proximity
+          td= special.start
+          td= special.end
+          td= special.updated_on
+      
+      if !specials.length
+        tr
+          td(colspan="5") No Specials found.
+    
+    

@@ -23,106 +23,38 @@ router.use((request, response, next) => {
 
 // GET /impressions
 router.get('/', (request, response, next) => {
-    var limit = 100;
-    var orderBy = 'created_on';
-    var token = request.query.pageToken;
     
-    model.list(kind, limit, orderBy, token, (err, entities, cursor) => {
-        if (err) {
-            next(err);
-            return;
-        }
-        response.render('impressions/list.jade', {
-            entities : entities,
-            pageTitle: "iRadar - Impressions",
-            pageId   : "impression-list",
-            token    : request.session.token,
-            id       : Number(request.session.id),
-            image    : request.session.image,
-            name     : request.session.name,
-            initials : request.session.initials,
-            role     : request.session.role
-        });
-    });
-});
-
-/*/ GET /impressions/add
-router.get('/add', (request, response) => {
-    response.render('impressions/form.jade', {
-        entity    : {},
-        pageTitle: "iRadar - New Impression",
-        pageId   : "new-impression",
-        token    : request.session.token,
-        id       : Number(request.session.id),
-        image    : request.session.image,
-        name     : request.session.name,
-        initials : request.session.initials,
-        role     : request.session.role
-    });
-});
-
-// POST /impressions/add
-router.post('/add', (request, response, next) => {
-    const data = request.body;
-    
-    // Save the data to the database.
-    model.create(kind, data, (err, savedData) => {
-        if (err) {
-            next(err);
-            return;
-        }
-        response.redirect(`${request.baseUrl}/${savedData.id}`);
-    });
-});*/
-
-// GET /impressions/:id/edit
-router.get('/:id/edit', (request, response, next) => {
-    var id = request.params.id;
-    
-    model.read(kind, id, (err, entity) => {
-        if (err) {
-            next(err);
-            return;
-        }
-        response.render('impressions/form.jade', {
-            entity   : entity,
-            entities : [],
-            pageTitle: "iRadar - Impression",
-            pageId   : "impression",
-            token    : request.session.token,
-            id       : Number(request.session.id),
-            image    : request.session.image,
-            name     : request.session.name,
-            initials : request.session.initials,
-            role     : request.session.role
-        });
-    });
-});
-
-// POST /impressions/:id/edit
-router.post('/:id/edit', (request, response, next) => {
-    var data = request.body;
-    var id = request.params.id;
-    
-    model.read(kind, id, (err, entity) => {
-        if (err) {
-            next(err);
-            return;
-        }
+    var impressionFilter = [];
+    if (request.session.role != 'admin')
+        impressionFilter.push(['store', String(request.session.store)]); // Store Access Control
+    model.query(kind, impressionFilter, function cb (err, impressions) {
+        if (err) return;
+        if (!impressions) impressions = [];
         
-        for (var key in data) {
-            if (key != 'id') {
-                console.log(key + ': ' + entity[key] + ', ' + data[key]);
-                entity[key] = data[key];
-            }
-        }
+        var searchFields = [];
+        searchFields.push({'name':'beacon',  'label':'Beacon'});
+        searchFields.push({'name':'special', 'label':'Special'});
+        searchFields.push({'name':'customer','label':'Customer'});
         
-        model.update(kind, id, entity, (err, savedData) => {
-            if (err) {
-                next(err);
-                return;
-            }
-            response.redirect(`${request.baseUrl}/${savedData.id}/edit`);
+        response.render('impression-list.pug', {
+            pageTitle   : "iRadar - Impressions",
+            pageId      : "impressions",
+            user: {
+                id      : String(request.session.id),
+                name    : String(request.session.name),
+                initials: String(request.session.initials),
+                image   : String(request.session.image),
+                role    : String(request.session.role),
+                store   : String(request.session.store),
+                token   : String(request.session.token)
+            },
+            entities    : impressions,
+            title       : 'Impressions',
+            canCreate   : false,
+            searchFields: searchFields,
+            start       : 1,
+            end         : Number(impressions.length),
+            count       : Number(impressions.length)
         });
     });
 });
@@ -133,7 +65,7 @@ router.get('/:id', (request, response, next) => {
     response.redirect(`/impressions/${id}/edit`);
 });
 
-/*/ GET /impressions/:id/delete
+// GET /impressions/:id/delete
 router.get('/:id/delete', (request, response, next) => {
     var id = request.params.id;
     
@@ -144,7 +76,7 @@ router.get('/:id/delete', (request, response, next) => {
         }
         response.redirect(request.baseUrl);
     });
-});*/
+});
 
 // Errors on "/impressions/*" routes.
 router.use((err, request, response, next) => {

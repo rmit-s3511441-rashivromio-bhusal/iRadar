@@ -11,37 +11,24 @@ const args       = { headers: config.kontaktHeaders };
 // Automatically parse request body as form data
 router.use(bodyParser.urlencoded({ extended: false }));
 
-/*/ Check for valid session
-router.use((request, response, next) => {
-    if (request.session && request.session.id)
-        next();
-    else
-        response.redirect('/login');
-});*/
-
-
-
-
-
-// GET /kontakt/import  Import from Kontakt.io portal
+// GET /kontakt/beacons  Import from Kontakt.io portal
 router.get('/beacons', (request, response) => {
     
-    var limit = 100;
+    var limit   = 100;
     var orderBy = 'unique_id';
-    var token = request.query.pageToken;
+    var token   = request.query.pageToken;
+    var userId  = request.session.id;
     
-    // Get a list of existing Beacons with the id and uniqueId for matching later
-    model.list('Beacon', limit, orderBy, token, (err, entities, cursor) => {
-        if (err) {
-            next(err);
-            return;
-        }
+    var beaconFilter = [];
+    model.query('Beacon', beaconFilter, function cb (err, beacons) {
+        if (err) return;
+        if (!beacons) beacons = [];
         
         // Populate the list
         var idList = {};
-        for (var i = 0; i < entities.length; i++) {
-            if (entities[i] && entities[i].unique_id) {
-                idList[String(entities[i].unique_id)] = String(entities[i].id);
+        for (var i = 0; i < beacons.length; i++) {
+            if (beacons[i] && beacons[i].unique_id) {
+                idList[String(beacons[i].unique_id)] = String(beacons[i].id);
             }
         }
         
@@ -68,11 +55,11 @@ router.get('/beacons', (request, response) => {
                 var obj = {};
                 obj.active        = true;
                 obj.unique_id     = String(beacon.uniqueId);
-                obj.store         = (beacon.venue && beacon.venue.id) ? String(beacon.venue.id) : '(unassigned)';
-                obj.minor         = Number(beacon.minor);
-                obj.major         = Number(beacon.major);
-                obj.actions_count = Number(beacon.actionsCount);
-                obj.alias         = beacon.alias ? String(beacon.alias) : '';
+                //obj.store         = (beacon.venue && beacon.venue.id) ? String(beacon.venue.id) : '(unassigned)';
+                obj.minor         = String(beacon.minor); // Storing as a Number will break queries
+                obj.major         = String(beacon.major);
+                //obj.actions_count = Number(beacon.actionsCount);
+                //obj.alias         = beacon.alias ? String(beacon.alias) : '';
                 obj.kontakt_id    = String(beacon.id);
                 obj.uuid          = String(beacon.secureProximity);
                 //obj.shuffled      = Boolean(beacon.shuffled);
@@ -92,17 +79,16 @@ router.get('/beacons', (request, response) => {
                 //obj.tags          = (beacon.tags) ? beacon.tags.join(', ') : '';
                 //obj.namespace     = String(beacon.namespace);
                 
-                model.update('Beacon', id, obj, function cb (err, savedData) {
-                    //console.log('savedData: ' + JSON.stringify(savedData));
-                    if (i == (beacons.length - 1)) {
-                        response.redirect('/home');
-                    }
+                model.update('Beacon', id, obj, userId, function cb (err, savedData) {
+                    
                 });
             } // end of for loop
         });
+        response.redirect('/beacons');
     });
 });
 
+/*
 // GET /kontakt/specials
 router.get('/specials', (request, response, next) => {
     
@@ -217,7 +203,7 @@ router.get('/stores', function (request, response, next) {
         });
     });
 });
-
+*/
 
 // Errors on "/kontakt/*" routes.
 router.use((err, request, response, next) => {

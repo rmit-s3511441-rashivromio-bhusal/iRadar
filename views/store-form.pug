@@ -1,0 +1,64 @@
+include header.pug
+.container.form-container
+  h3= kind
+  form(method="POST", onsubmit="return validateStore()")
+    .row
+      .col-sm-6.col-xs-12
+        each field in col1
+          include input.pug
+      .col-sm-6.col-xs-12
+        each field in col2
+          include input.pug
+    include save-delete.pug
+
+div
+  if !isNew
+    .container.related-list.form-container
+      h3 Beacons
+      .table.table-responsive
+        table.table.table-striped.table-bordered
+          tr
+            th Unique ID
+            th Alias
+            th UUID
+            th Major
+            th Minor
+        
+          each beacon in beacons
+            tr
+              td
+                a(href=`/beacons/${beacon.id}/edit`)= beacon.unique_id
+              td= beacon.alias
+              td= beacon.uuid
+              td= beacon.major
+              td= beacon.minor
+      
+          if !beacons.length
+            tr
+              td(colspan="5") No Beacons found.
+              
+    .container.related-list.form-container
+      h3 Users
+      .table.table-responsive
+        table.table.table-striped.table-bordered
+          tr
+            th Username
+            th First name
+            th Last name
+            th Email
+            th Role
+            th Last login
+        
+          each user in storeUsers
+            tr
+              td
+                a(href=`/users/${user.id}/edit`)= user.user_name
+              td= user.first_name
+              td= user.last_name
+              td= user.email
+              td= user.role
+              td= user.last_login
+      
+          if !storeUsers.length
+            tr
+              td(colspan="6") No Users found.

@@ -16,19 +16,20 @@ router.use((request, response, next) => {
     next();
 });
 
-router.use('/impressions', require('./impressions'));
-
 // GET /reports
 router.get('/', (request, response) => {
-    response.render('reports.jade', {
+    response.render('reports.pug', {
         pageTitle: "iRadar - Reports",
         pageId   : "reports",
-        token    : request.session.token,
-        id       : Number(request.session.id),
-        image    : request.session.image,
-        name     : request.session.name,
-        initials : request.session.initials,
-        role     : request.session.role
+        user     : {
+            id       : String(request.session.id),
+            name     : String(request.session.name),
+            initials : String(request.session.initials),
+            image    : String(request.session.image),
+            role     : String(request.session.role),
+            store    : String(request.session.store),
+            token    : String(request.session.token)
+        }
     });
 });
 

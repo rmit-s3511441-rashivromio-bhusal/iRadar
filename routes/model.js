@@ -1,7 +1,6 @@
-'use strict';
-
+const sys       = require('./sys');
 const Datastore = require('@google-cloud/datastore');
-const config = require('./config');
+const config    = require('./config');
   
 const ds = Datastore({
     projectId: String(config.projectId)
@@ -110,40 +109,62 @@ function read (kind, id, cb) {
 // Creates a new entity or updates an existing entity with new data. The provided
 // data is automatically translated into Datastore format. The entity will be
 // queued for background processing.
-function update (kind, id, newData, cb) {
+function update (kind, id, newData, userId, cb) {
     
-    console.log('update('+kind+', '+id+', '+JSON.stringify(newData)+')');
+    console.log('update('+kind+', '+id+', '+JSON.stringify(newData)+', '+userId+')');
     
     var nonIndexedFields = [];
-    if (kind == 'Beacon')
-        nonIndexedFields = ['actions_count', 'kontakt_id', 'last_sync', 'order_id', 'shuffled', 'created_on', 'updated_on'];
+    if (kind == 'User')
+        nonIndexedFields = ['password'];
+    /*
+    else if (kind == 'Beacon')
+        nonIndexedFields = [];
     else if (kind == 'Special')
-        nonIndexedFields = ['proximity', 'url', 'created_on', 'updated_on'];
+        nonIndexedFields = [];
     else if (kind == 'Property')
-        nonIndexedFields = ['type', 'value', 'created_on', 'updated_on'];
+        nonIndexedFields = [];
     else if (kind == 'Store')
-        nonIndexedFields = ['description', 'devices_count', 'created_on', 'updated_on'];
-    else if (kind == 'User')
-        nonIndexedFields = ['avatar', 'bad_passwords', 'image', 'last_login', 'locked_out', 'password', 'password_needs_reset', 'created_on', 'updated_on'];
+        nonIndexedFields = [];
     else if (kind == 'Impression')
-        nonIndexedFields = ['created_on', 'updated_on'];
-        
+        nonIndexedFields = [];
+    */
+    
     if (newData.id) {
         delete newData.id; // do not save id into a non-key field
     }
     
-    newData.updated_on = new Date();
+    newData.updated_on = sys.getNow();
+    newData.updated_by = userId;
     
     if (id) {
         read(kind, id, function (err, currentData) {
             if (err) {
-                cb(err);
+                if (cb) {
+                    cb(err);
+                }
                 return;
             }
-
+            
+            if (!currentData.created_on) {
+                currentData.created_on = sys.getNow();
+            }
+            if (!currentData.created_by) {
+                currentData.created_by = userId;
+            }
+            
             for (var prop in newData) {
                 if (currentData[prop] != newData[prop]) {
-                    // log change
+                    /*/ log change
+                    if (prop != 'created_on' && prop != 'created_by' && prop != 'updated_on' && prop != 'updated_by') {
+                        create('Audit', {
+                            'kind'     : String(kind),
+                            'key'      : String(id),
+                            'property' : String(prop),
+                            'user'     : String(userId),
+                            'new_value': String(newData[prop]),
+                            'old_value': String(currentData[prop])
+                        }, userId);
+                    }*/
                     currentData[prop] = newData[prop];
                 }
             }
@@ -160,10 +181,13 @@ function update (kind, id, newData, cb) {
             };
             //console.log('entity: '+JSON.stringify(entity)+')');
             ds.save(entity, (err) => {
-                if (err)
-                    cb(err);
-                else
+                if (err) {
+                    if (cb) {
+                        cb(err);
+                    }
+                } else {
                     read(kind, id, cb);
+                }
             });
         });
     } else {
@@ -174,11 +198,20 @@ function update (kind, id, newData, cb) {
             data: toDatastore(newData, nonIndexedFields)
         };
 
-        ds.save(entity, (err) => {
-            cb(err, err ? null : newData);
+        ds.save(entity, (err, a) => {
+            // We don't know the id of the new Entity, so look up the last one to be created
+            try {
+                console.log('a: ' + a);
+                console.log('a obj: ' + JSON.stringify(a));
+            } catch (ex) {
+                console.log(ex);
+            }
+            if (cb)
+                cb(err, err ? null : newData);
         });
     }
 }
+
 /*
 function update2 (id, data, cb) {
   let key;
@@ -200,11 +233,14 @@ function update2 (id, data, cb) {
   );
 }
 */
-function create (kind, data, cb) {
+
+function create (kind, data, userId, cb) {
+    console.log('INSERT');
     if (data) {
-        data.created_on = new Date();
+        data.created_on = sys.getNow();
+        data.created_by = userId;
     }
-    update(kind, null, data, cb);
+    update(kind, null, data, userId, cb);
 }
 
 function _delete (kind, id, cb) {
@@ -254,6 +290,69 @@ function query (kind, filters, callback) {
     });
 }
 
+function query2 (kind, filters, callback) {
+    console.log('query2()');
+    var query = ds.createQuery(kind);
+    
+    for (var i = 0; i < filters.length; i++) {
+        var field    = filters[i][0];
+        var operator = filters[i][1];
+        var value    = filters[i][2];
+        
+        query.filter(field, operator, value);
+        console.log('query.filter('+field+operator+value+')');
+    }
+    
+    ds.runQuery(query, function (err, entities, nextQuery) {
+        if (err) {
+            console.error('runQuery error: ' + err);
+            callback(err);
+        } else if (!entities[0]) {
+            callback(null, null);
+        } else {
+            callback(null, entities.map(fromDatastore));
+        }
+    });
+}
+
+function query3 (kind, storeId, orderBy, callback) {
+    console.log('query3()');
+        
+    var query = ds.createQuery(kind);
+    
+    // Add Store filter for Access Control
+    if (storeId) {
+        if (kind == 'Store')
+            query.filter('id', '=', storeId);
+        else if (kind == 'Beacon' || kind == 'Special' || kind == 'User')
+            query.filter('store', '=', storeId);
+    }
+    
+    // Add Order By
+    if (!orderBy) {
+        query.order('updated_on');
+    } else {
+        orderBy = String(orderBy);
+        if (orderBy.match(/DESC$/) != null) {
+            orderBy = orderBy.replace(/DESC$/, '');
+            query.order(orderBy, { descending: true });
+        } else {
+            query.order(orderBy);
+        }
+    }
+    
+    ds.runQuery(query, function (err, entities, nextQuery) {
+        if (err) {
+            console.error('runQuery error: ' + err);
+            callback(err);
+        } else if (!entities[0]) {
+            callback(null, null);
+        } else {
+            callback(null, entities.map(fromDatastore));
+        }
+    });
+}
+
 module.exports = {
     create,
     read,
@@ -261,5 +360,7 @@ module.exports = {
     delete: _delete,
     list,
     get,
-    query
+    query,
+    query2,
+    query3
 };

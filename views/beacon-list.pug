@@ -1,0 +1,49 @@
+include header.pug
+include list-header.pug
+.container.list-view
+  .table.table-responsive
+    table.table.table-striped.table-bordered
+      tr
+        th.cbc
+        th.order-by(onclick="orderBy('unique_id')") Unique ID
+          if order == 'unique_id'
+            span.glyphicon.glyphicon-chevron-down.pull-right
+        th.order-by(onclick="orderBy('alias')") Alias
+          if order == 'alias'
+            span.glyphicon.glyphicon-chevron-down.pull-right
+        th.order-by(onclick="orderBy('uuid')") UUID
+          if order == 'uuid'
+            span.glyphicon.glyphicon-chevron-down.pull-right
+        th.order-by(onclick="orderBy('major')") Major
+          if order == 'major'
+            span.glyphicon.glyphicon-chevron-down.pull-right
+        th.order-by(onclick="orderBy('minor')") Minor
+          if order == 'minor'
+            span.glyphicon.glyphicon-chevron-down.pull-right
+        th.order-by(onclick="orderBy('store')") Store
+          if order == 'store'
+            span.glyphicon.glyphicon-chevron-down.pull-right
+        th.order-by(onclick="orderBy('active')") Active
+          if order == 'active'
+            span.glyphicon.glyphicon-chevron-down.pull-right
+        th.order-by(onclick="orderBy('updated_on')") Updated on
+          if order == 'updated_on'
+            span.glyphicon.glyphicon-chevron-down.pull-right
+          
+      each beacon in beacons
+        tr
+          td.cbc
+            input.list-selector(type="checkbox", data-for=beacon.id, onclick="listSelectorToggled()")
+          td.filter(data-filter=`unique_id=${beacon.unique_id}`)
+            a(href=`/beacons/${beacon.id}/edit`)= beacon.unique_id
+          td.filter(data-filter=`alias=${beacon.alias}`)= beacon.alias
+          td.filter(data-filter=`uuid=${beacon.uuid}`)= beacon.uuid
+          td.filter(data-filter=`major=${beacon.major}`)= beacon.major
+          td.filter(data-filter=`minor=${beacon.minor}`)= beacon.minor
+          td.filter(data-filter=`store=${beacon.store}`)
+            a(href=`/stores/${beacon.store}/edit`)= beacon.store_dv
+          td.filter(data-filter=`active=${beacon.active}`)= beacon.active_dv
+          td.filter-date(data-filter=`updated_on=${beacon.updated_on}`)= beacon.updated_on_dv
+
+include list-footer.pug
+        
