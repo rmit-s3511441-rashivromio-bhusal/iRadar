@@ -1,9 +1,10 @@
 const kind       = 'User';
-const bodyParser = require('body-parser');
+const config     = require('./config');
 const model      = require('./model');
-const fs         = require('fs');
 const sys        = require('./sys');
 const bcrypt     = require('./bcrypt');
+const fs         = require('fs');
+const bodyParser = require('body-parser');
 
 const format     = require('util').format;
 const Multer     = require('multer');
@@ -13,7 +14,6 @@ const multer     = Multer({
         fileSize: 5 * 1024 * 1024 // no larger than 5mb, you can change as needed.
     }
 });
-
 const Storage    = require('@google-cloud/storage');
 const storage    = Storage();
 const bucket     = storage.bucket(process.env.GCLOUD_STORAGE_BUCKET);
@@ -41,42 +41,228 @@ router.use((request, response, next) => {
 
 // GET /users
 router.get('/', (request, response, next) => {
-    var store     = String(request.session.store);
-    var role      = String(request.session.role);
-    var isAdmin   = role == 'admin';
-    var isManager = Boolean(isAdmin || role == 'manager');
+    var userStore = String(request.session.store);
+    var userRole  = String(request.session.role);
+    var isAdmin   = userRole == 'admin';
+    var isManager = Boolean(isAdmin || userRole == 'manager');
+    var storeAC   = isAdmin ? false : userStore; // Store Access Control
     
-    var userFilters = [];
-    if (!isAdmin)
-        userFilters.push(['store', store]); // Store Access Control
-    model.query(kind, userFilters, function cb (err, users) {
-        if (err) return;
-        if (!users) users = [];
+    // URL query parameters
+    var rows  = request.query.rows  ? Number(request.query.rows)  : 20;
+    var start = request.query.start ? Number(request.query.start) : 1;
+    var order = request.query.order ? String(request.query.order) : 'user_name';
+    var query = request.query.query ? String(request.query.query) : null;
+    
+    model.query3(kind, storeAC, function cb (err, userList) {
+        if (err) sys.addError(request, err);
+        if (!userList) userList = [];
         
-        var storeFilter = [];
-        model.query('Store', storeFilter, function cb (err, stores) {
-            if (err) return;
-            if (!stores) stores = [];
+        // Reference data only
+        model.query3('Store', null, function cb (err, storeList) {
+            if (err) sys.addError(request, err);
+            if (!storeList) storeList = [];
             
-            var storeList = {};
-            for (var i = 0; i < stores.length; i++) {
-                storeList[String(stores[i].id)] = String(stores[i].name);
+            var store, storeNames = {}, storeOptions = [];
+            for (var i = 0; i < storeList.length; i++) {
+                store = storeList[i];
+                storeNames[String(store.id)] = String(store.name);
+                storeOptions.push({
+                    'label': String(store.name),
+                    'value': String(store.id)
+                });
             }
-            
-            // Set display values
+                
+            // Get display values
             var i, user;
-            for (i = 0; i < users.length; i++) {
-                user = users[i];
-                user.store_dv      = storeList[user.store];
+            for (i = 0; i < userList.length; i++) {
+                user = userList[i];
+                user.store_dv      = storeNames[user.store];
                 user.active_dv     = user.active ? 'Yes' : 'No';
                 user.updated_on_dv = sys.getDisplayValue(user.updated_on);
             }
+            
+            var activeOptions = [
+                {'label':'Yes','value':'true'},
+                {'label':'No', 'value':'false'}
+            ];
+
+            var headers = [
+                {'name':'user_name', 'label':'Username'},
+                {'name':'first_name', 'label':'First name'},
+                {'name':'last_name', 'label':'Last name'},
+                {'name':'email', 'label':'Email'},
+                {'name':'image', 'label':'Avatar'},
+                {'name':'store', 'label':'Store'},
+                {'name':'active', 'label':'Active'},
+                {'name':'updated_on', 'label':'Updated on'}
+            ];
             
             var searchFields = [];
             searchFields.push({'name':'user_name', 'label':'Username'});
             searchFields.push({'name':'first_name','label':'First name'});
             searchFields.push({'name':'last_name', 'label':'Last name'});
             searchFields.push({'name':'email',     'label':'Email'});
+
+            var bulkFields = [];
+            if (isAdmin)
+                bulkFields.push(sys.getFieldObj({}, 'ForeignKey', 'store', 'Store', false, false, storeOptions, 'Store'));
+            if (isManager)
+                bulkFields.push(sys.getFieldObj({}, 'Select', 'active', 'Active', false, false, activeOptions));
+            
+            // Datastore has very limited query functionality - so we'll filter via our own script here
+            var urlQueries = [], crumbs = [];
+
+            // URL for filter breadcrumbs
+            var url = '/users';
+            if (rows != 20)
+                urlQueries.push('rows=' + rows);
+            if (start != 1)
+                urlQueries.push('start=' + start);
+            if (order)
+                urlQueries.push('order=' + order);
+
+            crumbs.push({
+                'label': 'All',
+                'url'  : String(url)
+            });
+
+            if (query)
+                urlQueries.push('query=');
+
+            if (urlQueries.length > 0)
+                url += '?' + urlQueries.join('&');
+            var filters = query ? query.split('^') : [];
+            var filter, field, operator, searchValue;
+
+            for (i = 0; i < filters.length; i++) {
+                filter = String(filters[i]);
+
+                // Breadcrumbs
+                if (i != 0)
+                    url += '^';
+                url += filter;
+                crumbs.push({
+                    'label': String(filter),
+                    'url'  : String(url)
+                });
+
+                // Filters
+                field       = String(filter.match(/^[a-z_]+/i)[0]);
+                operator    = String(filter.match(/(>=|<=|>|<|!\*|=\*|!=|=)/)[0]); // Operators: = != > >= < <= !* =*
+                searchValue = String(filter.match(/[^\=\!\>\<\*]+$/)[0]) || '';
+
+                if (searchValue === 'true')
+                    searchValue = true;
+                if (searchValue === 'false')
+                    searchValue = false;
+
+                // look through userList and push any matching Specials into filteredList
+                var j, b, entityValue, filteredList = [];
+                for (j = 0; j < userList.length; j++) {
+                    if (!userList[j] || userList[j][field] === undefined) {
+                        continue;
+                    }
+                    entityValue = String(userList[j][field]);
+                    if (entityValue === 'true')
+                        entityValue = true;
+                    if (entityValue === 'false')
+                        entityValue = false;
+
+                    if (operator == '>=') {
+                        if (entityValue >= searchValue) {
+                            filteredList.push(userList[j]);
+                        }
+                    } else if (operator == '<=') {
+                        if (entityValue <= searchValue) {
+                            filteredList.push(userList[j]);
+                        }
+                    } else if (operator == '>') {
+                        if (entityValue > searchValue) {
+                            filteredList.push(userList[j]);
+                        }
+                    } else if (operator == '<') {
+                        if (entityValue < searchValue) {
+                            filteredList.push(userList[j]);
+                        }
+                    } else if (operator == '!*') {
+                        if (entityValue.indexOf(searchValue) == -1) {
+                            filteredList.push(userList[j]);
+                        }
+                    } else if (operator == '=*') {
+                        if (entityValue.indexOf(searchValue) != -1) {
+                            filteredList.push(userList[j]);
+                        }
+                    } else if (operator == '!=') {
+                        if (entityValue !== searchValue) {
+                            filteredList.push(userList[j]);
+                        }
+                    } else if (operator == '=') {
+                        if (entityValue === searchValue) {
+                            filteredList.push(userList[j]);
+                        }
+                    }
+                }
+                userList = filteredList;
+            }
+
+            // Sort
+            if (order && userList.length > 1) {
+                var orderBy = String(order);
+                var isAsc = true;
+                if (order.match(/DESC$/) != null) {
+                    orderBy = orderBy.replace(/DESC$/, '');
+                    isAsc = false;
+                }
+                if (isAsc) {
+                    userList.sort(function(a, b) {
+                        if (a[orderBy] < b[orderBy]) return -1;
+                        if (a[orderBy] > b[orderBy]) return 1;
+                        return 0;
+                    });
+                } else {
+                    userList.sort(function(a, b) {
+                        if (a[orderBy] > b[orderBy]) return -1;
+                        if (a[orderBy] < b[orderBy]) return 1;
+                        return 0;
+                    });
+                }
+            }
+
+            // Pagination
+            // from, to & count = display numbers
+            // start = start index (parameter)
+            // end = end index
+            var count = Number(userList.length);
+            var startIndex = start - 1;
+            var endIndex = startIndex + rows - 1;
+            var maxIndex = count - 1;
+            if (count == 0)
+                endIndex = 0;
+            else if (endIndex > maxIndex)
+                endIndex = maxIndex;
+
+            var list  = [];
+            for (var i = startIndex; i <= endIndex && i < userList.length; i++) {
+                list.push(userList[i]);
+            }
+            userList = list;
+
+            var from = (count == 0) ? 0 : start;
+            var to   = (count == 0) ? 0 : endIndex + 1;
+
+            // Pages object
+            var pages = [];
+            var num = 1;
+            for (var s = 1; s <= count; s += rows) {
+                pages.push({
+                    'num'   : Number(num),
+                    'start' : Number(s),
+                    'active': s == start
+                });
+                num++;
+            }
+
+            var messages = sys.getMessages(request);
 
             response.render('user-list.pug', {
                 user: {
@@ -90,14 +276,22 @@ router.get('/', (request, response, next) => {
                 },
                 pageTitle   : "iRadar - Users",
                 pageId      : "users",
-                users       : users,
+                kind        : kind,
+                users       : userList,
                 title       : 'Users',
                 canCreate   : isManager,
                 canDelete   : isAdmin,
                 searchFields: searchFields,
-                start       : 1,
-                end         : Number(users.length),
-                count       : Number(users.length)
+                bulkFields  : bulkFields,
+                pages       : pages,
+                from        : from,
+                to          : to,
+                count       : count,
+                crumbs      : crumbs,
+                headers     : headers,
+                rows        : rows,
+                order       : order,
+                messages    : messages
             }); 
         });
     });
@@ -106,44 +300,50 @@ router.get('/', (request, response, next) => {
 // GET /users/add
 router.get('/add', (request, response) => {
     var id        = request.params.id;
-    var store     = String(request.session.store);
-    var role      = String(request.session.role);
-    var isAdmin   = role == 'admin';
-    var isManager = Boolean(isAdmin || role == 'manager');
+    var userStore = String(request.session.store);
+    var userRole  = String(request.session.role);
+    var isAdmin   = userRole == 'admin';
+    var isManager = Boolean(isAdmin || userRole == 'manager');
     
     // Default values
     var user = {
         'active': true,
         'password_needs_reset': true,
         'password': 'Welcome1',
-        'bad_passwords': 0
+        'bad_passwords': 0,
+        'store': userStore,
+        'role': 'employee'
     };
     
-    var userFilter = [];
-    model.query('User', userFilter, function cb (err, users) {
-        if (err) return;
-        if (!users) users = [];
+    // Reference data only
+    model.query3('User', null, function cb (err, userList) {
+        if (err) sys.addError(request, err);
+        if (!userList) userList = [];
 
-        var storeFilter = [];
-        model.query('Store', storeFilter, function cb (err, stores) {
-            if (err) return;
-            if (!stores) stores = [];
+        // Reference data only
+        model.query3('Store', null, function cb (err, storeList) {
+            if (err) sys.addError(request, err);
+            if (!storeList) storeList = [];
 
             // Get options for Store field
-            var storeOptions = [];
-            for (var i = 0; i < stores.length; i++) {
+            var store, storeOptions = [];
+            for (var i = 0; i < storeList.length; i++) {
+                store = storeList[i];
                 storeOptions.push({
-                    'label': String(stores[i].name),
-                    'value': String(stores[i].id)
+                    'label': String(store.name),
+                    'value': String(store.id)
                 });
             }
-            var userOptions = [];
-            for (var i = 0; i < users.length; i++) {
+            
+            var u, userOptions = [];
+            for (var i = 0; i < userList.length; i++) {
+                u = userList[i];
                 userOptions.push({
-                    'label': users[i].first_name + ' ' + users[i].last_name,
-                    'value': String(users[i].id)
+                    'label': u.first_name + ' ' + u.last_name,
+                    'value': String(u.id)
                 });
             }
+            
             var roleOptions = [
                 {'label':'Employee','value':'employee'},
                 {'label':'Manager', 'value':'manager'},
@@ -158,13 +358,15 @@ router.get('/add', (request, response) => {
             if (isManager)
                 col1.push(sys.getFieldObj(user, 'Password', 'password', 'Password'));
             col1.push(sys.getFieldObj(user, 'String', 'email', 'Email', false, true));
-            col1.push(sys.getFieldObj(user, 'Select', 'role', 'Role', !isManager, isManager, roleOptions));
+            col1.push(sys.getFieldObj(user, 'Select', 'role', 'Role', !isAdmin, isAdmin, roleOptions));
             col1.push(sys.getFieldObj(user, 'ForeignKey', 'store', 'Store', !isAdmin, isAdmin, storeOptions, 'Store'));
             col1.push(sys.getFieldObj(user, 'URL', 'image', 'Avatar'));
-            col2.push(sys.getFieldObj(user, 'Boolean', 'active', 'Active', !isManager));
-            col2.push(sys.getFieldObj(user, 'Boolean', 'locked_out', 'Locked out', !isManager));
-            col2.push(sys.getFieldObj(user, 'Boolean', 'password_needs_reset','Password needs reset',!isManager));
+            col2.push(sys.getFieldObj(user, 'Boolean', 'active', 'Active'));
+            col2.push(sys.getFieldObj(user, 'Boolean', 'locked_out', 'Locked out'));
+            col2.push(sys.getFieldObj(user, 'Boolean', 'password_needs_reset','Password needs reset'));
 
+            var messages = sys.getMessages(request);
+            
             response.render('user-form.pug', {
                 user: {
                     id      : String(request.session.id),
@@ -183,7 +385,9 @@ router.get('/add', (request, response) => {
                 entity      : user,
                 col1        : col1,
                 col2        : col2,
-                isNew       : true
+                isNew       : true,
+                canEdit     : isManager,
+                messages    : messages
             });
         });
     });
@@ -192,82 +396,83 @@ router.get('/add', (request, response) => {
 
 // POST /users/add
 router.post('/add', (request, response, next) => {
-    var data = request.body;
-    var userId = String(request.session.id);
+    var data      = request.body;
+    var userId    = String(request.session.id);
+    var userStore = String(request.session.store);
     
-    data.active = Boolean(data.active);
-    data.locked_out = Boolean(data.locked_out);
+    data.active               = Boolean(data.active);
+    data.locked_out           = Boolean(data.locked_out);
     data.password_needs_reset = Boolean(data.password_needs_reset);
+    
+    if (!data.store)
+        data.store = userStore;
     
     if (data.password) {
         console.log('password: ' + data.password);
         bcrypt.cryptPassword(String(data.password), function(err, hash) {
-            if (err) {
-                console.log('cryptPassword error: ' + err);
-                return;
-            }
+            if (err) sys.addError(request, err);
+            
             console.log('hash: ' + hash);
-            data.password = hash;
+            data.password = String(hash);
             model.create(kind, data, userId, (err, savedData) => {
-                if (err) return;
-                response.redirect(`${request.baseUrl}/${savedData.id}`);
+                if (err) sys.addError(request, err);
+                else sys.addMessage(request, 'User created');
+                
+                response.redirect(request.baseUrl);
             });
         });
     } else {
         // Save the data to the database.
         model.create(kind, data, userId, (err, savedData) => {
-            if (err) return;
+            if (err) sys.addError(request, err);
+            else sys.addMessage(request, 'User created');
+            
             response.redirect(request.baseUrl); // `${request.baseUrl}/${savedData.id}`
         });
     }
 });
 
-// POST /users/bulk-update
-router.post('/bulk-update', (request, response, next) => {
-    var data = request.body;
-    var userId = String(request.session.id);
-    
-    console.log('Action: ' + data.bulkAction);
-    console.log('list: ' + data.bulkList);
-    response.redirect('/'); // users list
-});
-
 // GET /users/:id/edit
 router.get('/:id/edit', (request, response, next) => {
     var id        = request.params.id;
-    var store     = String(request.session.store);
-    var role      = String(request.session.role);
-    var isAdmin   = role == 'admin';
-    var isManager = isAdmin || role == 'manager';
+    var userStore = String(request.session.store);
+    var userRole  = String(request.session.role);
+    var userId    = String(request.session.id);
+    var isAdmin   = userRole == 'admin';
+    var storeAC   = isAdmin ? false : userStore; // Store Access Control
     
     model.read(kind, id, (err, user) => {
-        if (err) return;
+        if (err) sys.addError(request, err);
         
-        var userFilter = [];
-        model.query('User', userFilter, function cb (err, users) {
-            if (err) return;
-            if (!users) users = [];
+        // Reference data only
+        model.query3('User', null, function cb (err, userList) {
+            if (err) sys.addError(request, err);
+            if (!userList) userList = [];
             
-            var storeFilter = [];
-            model.query('Store', storeFilter, function cb (err, stores) {
-                if (err) return;
-                if (!stores) stores = [];
-
+            // Reference data only
+            model.query3('Store', null, function cb (err, storeList) {
+                if (err) sys.addError(request, err);
+                if (!storeList) storeList = [];
+                
                 // Get options for Store field
-                var storeOptions = [];
-                for (var i = 0; i < stores.length; i++) {
+                var store, storeOptions = [];
+                for (var i = 0; i < storeList.length; i++) {
+                    store = storeList[i];
                     storeOptions.push({
-                        'label': String(stores[i].name),
-                        'value': String(stores[i].id)
+                        'label': String(store.name),
+                        'value': String(store.id)
                     });
                 }
-                var userOptions = [];
-                for (var i = 0; i < users.length; i++) {
+                
+                var u, userOptions = [];
+                for (var i = 0; i < userList.length; i++) {
+                    u = userList[i];
                     userOptions.push({
-                        'label': users[i].first_name + ' ' + users[i].last_name,
-                        'value': String(users[i].id)
+                        'label': u.first_name + ' ' + u.last_name,
+                        'value': String(u.id)
                     });
                 }
+                
                 var roleOptions = [
                     {'label':'Employee','value':'employee'},
                     {'label':'Manager', 'value':'manager'},
@@ -276,25 +481,30 @@ router.get('/:id/edit', (request, response, next) => {
                 
                 delete user.password; // Do not show
                 
+                var isManager = Boolean(isAdmin || (userRole == 'manager' && user.store == userStore));
+                var isMe      = Boolean(user.id == userId);
+                var canEdit   = Boolean(isManager || isMe);
+                var canEditOther = isManager && !isMe;
+                
                 // Form fields: entity, type, name, label, isDisabled, isMandatory, options, foreignKind
                 var col1 = [], col2 = [];
-                col1.push(sys.getFieldObj(user, 'String', 'first_name', 'First name', false, true));
-                col1.push(sys.getFieldObj(user, 'String', 'last_name', 'Last name', false, true));
-                col1.push(sys.getFieldObj(user, 'String', 'user_name', 'Username', false, true));
-                if (isManager)
+                col1.push(sys.getFieldObj(user, 'String', 'first_name', 'First name', !canEdit, canEdit));
+                col1.push(sys.getFieldObj(user, 'String', 'last_name', 'Last name', !canEdit, canEdit));
+                col1.push(sys.getFieldObj(user, 'String', 'user_name', 'Username', !canEditOther, canEditOther));
+                if (canEdit)
                     col1.push(sys.getFieldObj(user, 'Password', 'password', 'Password'));
-                col1.push(sys.getFieldObj(user, 'String', 'email', 'Email', false, true));
-                col1.push(sys.getFieldObj(user, 'Select', 'role', 'Role', !isManager, isManager, roleOptions));
+                col1.push(sys.getFieldObj(user, 'Email', 'email', 'Email', false, true));
+                col1.push(sys.getFieldObj(user, 'Select', 'role', 'Role', !isAdmin, isAdmin, roleOptions));
                 col1.push(sys.getFieldObj(user, 'ForeignKey', 'store', 'Store', !isAdmin, isAdmin, storeOptions, 'Store'));
-                col1.push(sys.getFieldObj(user, 'URL', 'image', 'Avatar'));
+                col1.push(sys.getFieldObj(user, 'URL', 'image', 'Avatar', !canEdit));
                 col2.push(sys.getFieldObj(user, 'String', 'id', 'ID', true));
                 col2.push(sys.getFieldObj(user, 'ForeignKey', 'created_by', 'Created by', true, false, userOptions, 'User'));
                 col2.push(sys.getFieldObj(user, 'DateTime', 'created_on', 'Created on', true));
                 col2.push(sys.getFieldObj(user, 'ForeignKey', 'updated_by', 'Updated by', true, false, userOptions, 'User'));
                 col2.push(sys.getFieldObj(user, 'DateTime', 'updated_on', 'Updated on', true));
-                col2.push(sys.getFieldObj(user, 'Boolean', 'active', 'Active', !isManager));
+                col2.push(sys.getFieldObj(user, 'Boolean', 'active', 'Active', !canEditOther));
                 col2.push(sys.getFieldObj(user, 'Boolean', 'locked_out', 'Locked out', !isManager));
-                col2.push(sys.getFieldObj(user, 'Boolean', 'password_needs_reset','Password needs reset',!isManager));
+                col2.push(sys.getFieldObj(user, 'Boolean', 'password_needs_reset','Password needs reset', !isManager));
                 
                 response.render('user-form.pug', {
                     user: {
@@ -313,7 +523,9 @@ router.get('/:id/edit', (request, response, next) => {
                     isManager   : isManager,
                     entity      : user,
                     col1        : col1,
-                    col2        : col2
+                    col2        : col2,
+                    canEdit     : canEdit,
+                    canDelete   : Boolean(isAdmin && !isMe)
                 });
             });
         });
@@ -333,26 +545,80 @@ router.post('/:id/edit', (request, response, next) => {
     if (data.password) {
         console.log('password: ' + data.password);
         bcrypt.cryptPassword(String(data.password), function(err, hash) {
-            if (err) {
-                console.log('cryptPassword error: ' + err);
-                return;
-            }
+            if (err) sys.addError(request, err);
+            
             console.log('hash: ' + hash);
-            data.password = hash;
+            data.password = String(hash);
+            
             model.update(kind, id, data, userId, (err, savedData) => {
-                if (err) return;
+                if (err) sys.addError(request, err);
+                else sys.addMessage(request, 'User updated');
+                
                 response.redirect(`${request.baseUrl}/${savedData.id}/edit`);
             });
         });
     } else {
         model.update(kind, id, data, userId, (err, savedData) => {
-            if (err) return;
+            if (err) sys.addError(request, err);
+            else sys.addMessage(request, 'User updated');
+            
             response.redirect(`${request.baseUrl}/${savedData.id}/edit`);
         });
     }
 });
 
 
+// POST /users/bulk-update
+router.post('/bulk-update', (request, response, next) => {
+    console.log('/specials/bulk-update');
+    var data   = request.body;
+    var userId = String(request.session.id);
+    
+    var list = data.bulkList ? String(data.bulkList).split(',') : [];
+    var len  = list.length;
+    
+    var newData = {};
+    if (data.store)
+        newData.store = String(data.store);
+    if (data.active)
+        newData.active = data.active == 'true';
+    
+    for (var i = 0; i < len; i++) {
+        model.update(kind, list[i], newData, userId, function cb(err, savedData) {
+            if (err) sys.addError(request, err);
+            
+            if (i == len-1) {
+                sys.addMessage(request, len + ' User' + (len==1?'':'s') + ' updated');
+                response.redirect('/specials'); // beacons list
+            }
+        });
+    }
+    sys.addMessage(request, len + ' User' + (len==1?'':'s') + ' updated');
+    response.redirect('/users');
+});
+
+// POST /users/bulk-delete
+router.post('/bulk-delete', (request, response, next) => {
+    console.log('/users/bulk-delete');
+    var data   = request.body;
+    var userId = String(request.session.id);
+    
+    var list   = data.bulkList2 ? String(data.bulkList2).split(',') : [];
+    var len    = list.length;
+    
+    for (var i = 0; i < len; i++) {
+        model.delete(kind, list[i], userId, function cb(err) {
+            if (err) sys.addError(request, err);
+            
+            if (i == len-1) {
+                sys.addMessage(request, len + ' User' + (len==1?'':'s') + ' deleted');
+                response.redirect('/users'); // beacons list
+            }
+        });
+    }
+    sys.addMessage(request, len + ' User' + (len==1?'':'s') + ' deleted');
+    response.redirect('/users');
+});
 
 // Process the file upload and upload to Google Cloud Storage.
 router.post('/:id/upload', multer.single('file'), (request, response, next) => {
@@ -415,8 +681,6 @@ router.post('/:id/upload', multer.single('file'), (request, response, next) => {
     blobStream.end(request.file.buffer);
 });
 
-
-
 // GET /users/:id
 router.get('/:id', (request, response, next) => {
     var id = request.params.id;
@@ -426,22 +690,34 @@ router.get('/:id', (request, response, next) => {
 // GET /users/:id/delete
 router.get('/:id/delete', (request, response, next) => {
     var id = request.params.id;
+    var userId = String(request.session.id);
     
-    model.delete(kind, id, (err) => {
-        if (err) {
-            next(err);
-            return;
-        }
+    model.delete(kind, id, userId, (err) => {
+        if (err) sys.addError(request, err);
+        else sys.addMessage(request, 'User deleted');
+        
         response.redirect(request.baseUrl);
     });
 });
 
 // Errors on "/users/*" routes.
 router.use((err, request, response, next) => {
-    // Format error and forward to generic error handler for logging and
-    // responding to the request
-    err.response = err.message;
-    next(err);
+    sys.addError(request, err.message);
+    var messages = sys.getMessages(request);
+    response.status(500).render('500.pug', {
+        user : {
+            id      : String(request.session.id),
+            name    : String(request.session.name),
+            initials: String(request.session.initials),
+            image   : String(request.session.image),
+            role    : String(request.session.role),
+            store   : String(request.session.store),
+            token   : String(request.session.token)
+        },
+        pageTitle   : "iRadar - 500",
+        pageId      : "500",
+        messages    : messages
+    });
 });
 
 module.exports = router;

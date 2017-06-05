@@ -3,16 +3,7 @@ include list-header.pug
 .container.list-view
   .table.table-responsive
     table.table.table-striped.table-bordered
-      tr
-        th.cbc
-        th Username
-        th First name
-        th Last name
-        th Email
-        th Avatar
-        th Store
-        th Active
-        th Updated on
+      include list-th.pug
           
       each user in users
         tr

@@ -1,8 +1,9 @@
 .row
   .col-xs-12
     .form-group
-      button.btn.btn-success(type="submit") Save
-      if isAdmin && !isNew
+      if canEdit
+        button.btn.btn-success(type="submit") Save
+      if canDelete && !isNew
         // Modal to confirm delete
         button.btn.btn-danger.pull-right(type="button", data-toggle="modal", data-target="#deleteModal") Delete
         .modal.fade(id="deleteModal", tabindex="-1", role="dialog")

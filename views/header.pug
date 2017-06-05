@@ -10,20 +10,20 @@ html(lang="en")
     script(src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/locale/en-au.js")
     script(src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js")
     script(src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/js/bootstrap-datetimepicker.min.js")
-    script(src="https://iradar-dev.appspot.com/BootstrapMenu.js")
+    script(src="/BootstrapMenu.js")
     
     link(rel="stylesheet", href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/css/bootstrap-datetimepicker.min.css")
-    link(rel="stylesheet", href="https://iradar-dev.appspot.com/style.css")
+    link(rel="stylesheet", href="/style.css")
     
-    script(src="https://iradar-dev.appspot.com/listControls.js")
-    script(src="https://iradar-dev.appspot.com/vailidators.js")
+    script(src="/listControls.js")
+    script(src="/vailidators.js")
     
     // favicon stuff
-    link(rel="apple-touch-icon", sizes="180x180", href="https://iradar-dev.appspot.com/apple-touch-icon.png")
-    link(rel="icon", type="image/png", href="https://iradar-dev.appspot.com/favicon-32x32.png", sizes="32x32")
-    link(rel="icon", type="image/png", href="https://iradar-dev.appspot.com/favicon-16x16.png", sizes="16x16")
-    link(rel="manifest", href="https://iradar-dev.appspot.com/manifest.json")
-    link(rel="mask-icon", href="https://iradar-dev.appspot.com/safari-pinned-tab.svg", color="#283593")
+    link(rel="apple-touch-icon", sizes="180x180", href="/apple-touch-icon.png")
+    link(rel="icon", type="image/png", href="/favicon-32x32.png", sizes="32x32")
+    link(rel="icon", type="image/png", href="/favicon-16x16.png", sizes="16x16")
+    link(rel="manifest", href="/manifest.json")
+    link(rel="mask-icon", href="/safari-pinned-tab.svg", color="#283593")
     meta(name="theme-color", content="#ffffff")
     
   body(id=pageId)
@@ -31,7 +31,7 @@ html(lang="en")
       .navbar-header
         .navbar-brand
           a(href="/home")
-            img(src="https://iradar-dev.appspot.com/iRadarLogo.png", alt="iRadar Logo")
+            img(src="/iRadarLogo.png", alt="iRadar Logo")
         button.navbar-toggle(type="button", data-toggle="collapse", data-target="#myNavbar")
           span.icon-bar
           span.icon-bar
@@ -67,8 +67,15 @@ html(lang="en")
               li
                 a(href="/logout") Log out
               
-    if info
+    if messages
       .container.alert-container
-        .alert.alert-success.alert-dismissable
-          a.close(href="#", data-dismiss="alert", aria-label="close") &times;
-            strong= info
+        each message in messages
+          if message.type == 'danger'
+            .alert.alert-danger.alert-dismissable
+              a.close(href="#", data-dismiss="alert", aria-label="close") &times;
+              strong= message.msg
+          else
+            .alert.alert-success.alert-dismissable
+              a.close(href="#", data-dismiss="alert", aria-label="close") &times;
+              strong= message.msg
+        

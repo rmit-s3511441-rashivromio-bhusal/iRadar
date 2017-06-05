@@ -3,32 +3,7 @@ include list-header.pug
 .container.list-view
   .table.table-responsive
     table.table.table-striped.table-bordered
-      tr
-        th.cbc
-        th.order-by(onclick="orderBy('unique_id')") Unique ID
-          if order == 'unique_id'
-            span.glyphicon.glyphicon-chevron-down.pull-right
-        th.order-by(onclick="orderBy('alias')") Alias
-          if order == 'alias'
-            span.glyphicon.glyphicon-chevron-down.pull-right
-        th.order-by(onclick="orderBy('uuid')") UUID
-          if order == 'uuid'
-            span.glyphicon.glyphicon-chevron-down.pull-right
-        th.order-by(onclick="orderBy('major')") Major
-          if order == 'major'
-            span.glyphicon.glyphicon-chevron-down.pull-right
-        th.order-by(onclick="orderBy('minor')") Minor
-          if order == 'minor'
-            span.glyphicon.glyphicon-chevron-down.pull-right
-        th.order-by(onclick="orderBy('store')") Store
-          if order == 'store'
-            span.glyphicon.glyphicon-chevron-down.pull-right
-        th.order-by(onclick="orderBy('active')") Active
-          if order == 'active'
-            span.glyphicon.glyphicon-chevron-down.pull-right
-        th.order-by(onclick="orderBy('updated_on')") Updated on
-          if order == 'updated_on'
-            span.glyphicon.glyphicon-chevron-down.pull-right
+      include list-th.pug
           
       each beacon in beacons
         tr

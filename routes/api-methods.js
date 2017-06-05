@@ -4,7 +4,7 @@ module.exports = function (kind, orderBy) {
     const express    = require('express');
     const router     = express.Router();
     const model      = require('./model');
-    const userId     = '5692462144159744'; // Rashiv
+    const userId     = '5206379891523584'; // admin
     
     router.use(bodyParser.json());
     
@@ -37,15 +37,33 @@ module.exports = function (kind, orderBy) {
             return;
         }
         
-        console.log('POST - kind: ' + kind + ', data: ' + request.body + ', userId: ' + userId);
+        var data = request.body;
         
-        model.create(kind, request.body, userId, (err, entity) => {
-            if (err) {
-                next(err);
-                return;
-            }
-            response.json(entity);
-        });
+        console.log('POST - kind: ' + kind + ', data: ' + data + ', userId: ' + userId);
+        
+        if (kind == 'Impression' && data.beacon) {
+            model.get('Beacon', 'unique_id', String(data.beacon), function(beacon){
+                data.beacon_id = String(beacon.id);
+                data.store = String(beacon.store);
+                
+                model.create(kind, request.body, userId, (err, entity) => {
+                    if (err) {
+                        next(err);
+                        return;
+                    }
+                    response.json(entity);
+                });
+            });
+        }
+        else {
+            model.create(kind, request.body, userId, (err, entity) => {
+                if (err) {
+                    next(err);
+                    return;
+                }
+                response.json(entity);
+            });
+        }
     });
 
     // GET /api/kind/{id}

@@ -1,0 +1,13 @@
+if headers && headers.length
+  tr
+    th.cbc
+    each header in headers
+      if !header.name
+        th= header.label
+      if order == header.name
+        th.order-by(onclick=`orderBy('${header.name}DESC')`)= header.label
+          span.glyphicon.glyphicon-chevron-down.pull-right
+      else
+        th.order-by(onclick=`orderBy('${header.name}')`)= header.label
+          if order == header.name + 'DESC'
+            span.glyphicon.glyphicon-chevron-up.pull-right

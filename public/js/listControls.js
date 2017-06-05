@@ -78,7 +78,7 @@ function search() {
         alert('Please enter a search term');
         return;
     }
-    addQuery(field + '=' + str);
+    addQuery(field + '=*' + str);
 }
 
 function deleteRows() {

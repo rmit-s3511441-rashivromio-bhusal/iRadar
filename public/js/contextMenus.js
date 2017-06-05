@@ -28,14 +28,28 @@ var dateMenu = new BootstrapMenu('.filter-date', {
         return String($td.data('filter'));
     },
     actions: [{
-        name: 'Show matching',
+        name: 'Show matching time',
         onClick: function(filter) {
             addQuery(filter);
         }
     },{
-        name: 'Filter out',
+        name: 'Filter out time',
         onClick: function(filter) {
             addQuery(String(filter).replace(/=/, '!='));
+        }
+    },{
+        name: 'Show matching date',
+        onClick: function(filter) {
+            filter = filter.substring(0, filter.indexOf(' ')); // trim time
+            filter = filter.replace(/=/, '=*');
+            addQuery(filter);
+        }
+    },{
+        name: 'Filter out date',
+        onClick: function(filter) {
+            filter = filter.substring(0, filter.indexOf(' ')); // trim time
+            filter = filter.replace(/=/, '!*');
+            addQuery(filter);
         }
     },{
         name: 'Show at and before this time',

@@ -1,5 +1,3 @@
-'use strict';
-
 const path          = require('path');
 const cookieSession = require('cookie-session')
 const helmet        = require('helmet');
@@ -84,13 +82,13 @@ app.use((request, response) => {
         pageTitle: "iRadar - 404",
         pageId   : "404",
         user     : {
-            id       : String(request.session.id),
-            name     : String(request.session.name),
-            initials : String(request.session.initials),
-            image    : String(request.session.image),
-            role     : String(request.session.role),
-            store    : String(request.session.store),
-            token    : String(request.session.token)
+            id      : String(request.session.id),
+            name    : String(request.session.name),
+            initials: String(request.session.initials),
+            image   : String(request.session.image),
+            role    : String(request.session.role),
+            store   : String(request.session.store),
+            token   : String(request.session.token)
         }
     });
 });

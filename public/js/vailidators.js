@@ -98,6 +98,7 @@ function validateEmail(id, label) {
 
 function validatePassword() {
     var id = 'password';
+    clearError(id);
     var pw = String(gel(id).value);
     if (!pw) {
         addError(id, 'Password cannot be empty');

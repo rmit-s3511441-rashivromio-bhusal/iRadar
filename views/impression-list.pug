@@ -3,20 +3,20 @@ include list-header.pug
 .container.list-view
   .table.table-responsive
     table.table.table-striped.table-bordered
-      tr
-        th.cbc
-        th Beacon
-        th Special
-        th Customer
-        th Created on
+      include list-th.pug
         
-      each impression in entities
+      each impression in impressions
         tr
           td.cbc
             input.list-selector(type="checkbox", data-for=impression.id, onclick="listSelectorToggled()")
-          td.filter(data-filter=`beacon=${impression.beacon}`)= impression.beacon
-          td.filter(data-filter=`special=${impression.special}`)= impression.special
+          td.filter-date(data-filter=`created_on=${impression.created_on}`)= impression.created_on_dv
+          td.filter(data-filter=`store=${impression.store}`)
+            a(href=`/stores/${impression.store}/edit`)= impression.store_dv
+          td.filter(data-filter=`beacon=${impression.beacon}`)
+            a(href=`/beacons/${impression.beacon_id}/edit`)= impression.beacon
+          td.filter(data-filter=`special=${impression.special}`)
+            a(href=`/specials/${impression.special}/edit`)= impression.special_dv
           td.filter(data-filter=`customer=${impression.customer}`)= impression.customer
-          td.filter(data-filter=`created_on=${impression.created_on}`)= impression.created_on
+          
 
 include list-footer.pug

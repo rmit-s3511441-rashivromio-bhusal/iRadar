@@ -1,10 +1,10 @@
 const kind       = 'Beacon';
-const bodyParser = require('body-parser');
 const config     = require('./config');
-const express    = require('express');
-const router     = express.Router();
 const model      = require('./model');
 const sys        = require('./sys');
+const bodyParser = require('body-parser');
+const express    = require('express');
+const router     = express.Router();
 
 // Automatically parse request body as form data
 router.use(bodyParser.urlencoded({ extended: false }));
@@ -30,24 +30,19 @@ router.get('/', (request, response, next) => {
     var isAdmin   = userRole == 'admin';
     var storeAC   = isAdmin ? false : userStore; // Store Access Control
     
-    var errors     = [];
-    var bulkFields = [];
-    var crumbs     = [];
-    var list       = []; // Beacons
-    var messages   = [];
-    
-    var rows  = request.query.rows  ? Number(request.query.rows)  : null;
-    var start = request.query.start ? Number(request.query.start) : null;
+    // URL query parameters
+    var rows  = request.query.rows  ? Number(request.query.rows)  : 20;
+    var start = request.query.start ? Number(request.query.start) : 1;
     var order = request.query.order ? String(request.query.order) : 'unique_id';
     var query = request.query.query ? String(request.query.query) : null;
     
-    model.query3(kind, storeAC, order, function cb (err, beaconList) {
-        if (err) errors.push(String(err));
+    model.query3(kind, storeAC, function cb (err, beaconList) {
+        if (err) sys.addError(request, err);
         if (!beaconList) beaconList = [];
         
         // Reference data only
-        model.query3('Store', false, 'name', function cb (err, storeList) {
-            if (err) errors.push(String(err));
+        model.query3('Store', null, function cb (err, storeList) {
+            if (err) sys.addError(request, err);
             if (!storeList) storeList = [];
             
             // Get display values and Options list for Stores
@@ -62,12 +57,12 @@ router.get('/', (request, response, next) => {
                     'value': String(store.id)
                 });
             }      
-            
+           
             // Get display values for Beacons
             var beacon;
             for (i = 0; i < beaconList.length; i++) {
                 beacon = beaconList[i];
-                beacon.store_dv      = storeList[beacon.store];
+                beacon.store_dv      = storeNames[beacon.store];
                 beacon.active_dv     = beacon.active ? 'Yes' : 'No';
                 beacon.updated_on_dv = sys.getDisplayValue(beacon.updated_on);
             }
@@ -86,33 +81,50 @@ router.get('/', (request, response, next) => {
                 {'label':'No', 'value':'false'}
             ];
             
+            var headers = [
+                {'name':'unique_id','label':'Unique ID'},
+                {'name':'alias','label':'Alias'},
+                {'name':'uuid','label':'UUID'},
+                {'name':'major','label':'Major'},
+                {'name':'minor','label':'Minor'},
+                {'name':'store','label':'Store'},
+                {'name':'active','label':'Active'},
+                {'name':'updated_on','label':'Updated on'}
+            ];
+            
+            var bulkFields = [];
             if (isAdmin)
                 bulkFields.push(sys.getFieldObj({}, 'ForeignKey', 'store', 'Store', false, false, storeOptions, 'Store'));
             bulkFields.push(sys.getFieldObj({}, 'String', 'alias', 'Alias'));
             bulkFields.push(sys.getFieldObj({}, 'Select', 'active', 'Active', false, false, activeOptions));
             
             // Datastore has very limited query functionality - so we'll filter via our own script here
-            var urlQueries = [];
+            var urlQueries = [], crumbs = [];
             
             // URL for filter breadcrumbs
             var url = '/beacons';
-            if (rows)
+            if (rows != 20)
                 urlQueries.push('rows=' + rows);
-            if (start)
+            if (start != 1)
                 urlQueries.push('start=' + start);
             if (order)
                 urlQueries.push('order=' + order);
+            
+            crumbs.push({
+                'label': 'All',
+                'url'  : String(url)
+            });
+            
             if (query)
                 urlQueries.push('query=');
             
             if (urlQueries.length > 0)
-                url += '?' + urlQueries.join('&'));
-            
+                url += '?' + urlQueries.join('&');
             var filters = query ? query.split('^') : [];
-            var filter, field, operator, value;
+            var filter, field, operator, searchValue;
+            
             for (i = 0; i < filters.length; i++) {
                 filter = String(filters[i]);
-                console.log('filter: ' + filter);
                 
                 // Breadcrumbs
                 if (i != 0)
@@ -124,27 +136,111 @@ router.get('/', (request, response, next) => {
                 });
                 
                 // Filters
-                field    = String(filter.match(/^[a-z_]+/i)[0]);
-                operator = String(filter.match(/(>=|<=|>|<|!\*|=\*|!=|=)/)[0]); // Operators: = != > >= < <= !* =*
-                value    = String(filter.match(/[^\=\!\>\<\*]+$/)[0]);
+                field       = String(filter.match(/^[a-z_]+/i)[0]);
+                operator    = String(filter.match(/(>=|<=|>|<|!\*|=\*|!=|=)/)[0]); // Operators: = != > >= < <= !* =*
+                searchValue = String(filter.match(/[^\=\!\>\<\*]+$/)[0]) || '';
                 
-                console.log(field + ', ' + operator + ', ' + value);
+                if (searchValue === 'true')
+                    searchValue = true;
+                if (searchValue === 'false')
+                    searchValue = false;
                 
+                // look through beaconList and push any matching Beacons into filteredList
+                var j, b, entityValue, filteredList = [];
+                for (j = 0; j < beaconList.length; j++) {
+                    if (!beaconList[j] || beaconList[j][field] === undefined) {
+                        continue;
+                    }
+                    entityValue = String(beaconList[j][field]);
+                    if (entityValue === 'true')
+                        entityValue = true;
+                    if (entityValue === 'false')
+                        entityValue = false;
+                    
+                    if (operator == '>=') {
+                        if (entityValue >= searchValue) {
+                            filteredList.push(beaconList[j]);
+                        }
+                    } else if (operator == '<=') {
+                        if (entityValue <= searchValue) {
+                            filteredList.push(beaconList[j]);
+                        }
+                    } else if (operator == '>') {
+                        if (entityValue > searchValue) {
+                            filteredList.push(beaconList[j]);
+                        }
+                    } else if (operator == '<') {
+                        if (entityValue < searchValue) {
+                            filteredList.push(beaconList[j]);
+                        }
+                    } else if (operator == '!*') {
+                        if (entityValue.indexOf(searchValue) == -1) {
+                            filteredList.push(beaconList[j]);
+                        }
+                    } else if (operator == '=*') {
+                        if (entityValue.indexOf(searchValue) != -1) {
+                            filteredList.push(beaconList[j]);
+                        }
+                    } else if (operator == '!=') {
+                        if (entityValue !== searchValue) {
+                            filteredList.push(beaconList[j]);
+                        }
+                    } else if (operator == '=') {
+                        if (entityValue === searchValue) {
+                            filteredList.push(beaconList[j]);
+                        }
+                    }
+                }
+                beaconList = filteredList;
             }
-            console.log('beaconFilter: ' + JSON.stringify(beaconFilter));
-
-    
+            
+            // Sort
+            if (order && beaconList.length > 1) {
+                var orderBy = String(order);
+                var isAsc = true;
+                if (order.match(/DESC$/) != null) {
+                    orderBy = orderBy.replace(/DESC$/, '');
+                    isAsc = false;
+                }
+                if (isAsc) {
+                    beaconList.sort(function(a, b) {
+                        if (a[orderBy] < b[orderBy]) return -1;
+                        if (a[orderBy] > b[orderBy]) return 1;
+                        return 0;
+                    });
+                } else {
+                    beaconList.sort(function(a, b) {
+                        if (a[orderBy] > b[orderBy]) return -1;
+                        if (a[orderBy] < b[orderBy]) return 1;
+                        return 0;
+                    });
+                }
+            }
+            
             // Pagination
+            // from, to & count = display numbers
+            // start = start index (parameter)
+            // end = end index
             var count = Number(beaconList.length);
-            var pages = [];
+            var startIndex = start - 1;
+            var endIndex = startIndex + rows - 1;
+            var maxIndex = count - 1;
+            if (count == 0)
+                endIndex = 0;
+            else if (endIndex > maxIndex)
+                endIndex = maxIndex;
+            
             var list  = [];
-            var s = start-1;
-            var e = s + rows;
-            if (e > count)
-                e = count;
-            for (var i = s; i < e; i++) {
+            for (var i = startIndex; i <= endIndex && i < beaconList.length; i++) {
                 list.push(beaconList[i]);
             }
+            beaconList = list;
+            
+            var from = (count == 0) ? 0 : start;
+            var to   = (count == 0) ? 0 : endIndex + 1;
+            
+            // Pages object
+            var pages = [];
             var num = 1;
             for (var s = 1; s <= count; s += rows) {
                 pages.push({
@@ -154,9 +250,8 @@ router.get('/', (request, response, next) => {
                 });
                 num++;
             }
-            console.log('pages: ' + JSON.stringify(pages));
             
-            messages.push('Do you want ants? Because that\'s how you get ants.');
+            var messages = sys.getMessages(request);
             
             response.render('beacon-list.pug', {
                 user: {
@@ -171,19 +266,19 @@ router.get('/', (request, response, next) => {
                 pageTitle   : 'iRadar - Beacon',
                 pageId      : 'beacons',
                 kind        : 'Beacon',
-                beacons     : list,
+                beacons     : beaconList,
                 title       : 'Beacons',
                 canCreate   : false,
                 canDelete   : isAdmin,
                 searchFields: searchFields,
-                actions     : actions,
-                start       : start,
-                end         : (start + rows),
-                count       : count,
                 bulkFields  : bulkFields,
-                crumbs      : crumbs,
-                rows        : rows,
                 pages       : pages,
+                from        : from,
+                to          : to,
+                count       : count,
+                crumbs      : crumbs,
+                headers     : headers,
+                rows        : rows,
                 order       : order,
                 messages    : messages
             });
@@ -193,27 +288,29 @@ router.get('/', (request, response, next) => {
 
 // GET /beacons/:id/edit
 router.get('/:id/edit', (request, response, next) => {
-    var id      = request.params.id;
-    var store   = String(request.session.store);
-    var role    = String(request.session.role);
-    var isAdmin = role == 'admin';
+    var id        = request.params.id;
+    var userStore = String(request.session.store);
+    var userRole  = String(request.session.role);
+    var isAdmin   = userRole == 'admin';
+    var canEdit   = false;
     
     model.read(kind, id, (err, beacon) => {
-        if (err) return;
+        if (err) sys.addError(request, err);
         
-        var storeFilter = [];
-        model.query('Store', storeFilter, function cb (err, stores) {
-            if (err) return;
+        // Access Control: User must be admin or belong to the Beacon's Store
+        canEdit = isAdmin || userStore == beacon.store;
+        
+        model.query3('Store', null, function cb (err, stores) {
+            if (err) sys.addError(request, err);
             if (!stores) stores = [];
             
             var specialFilter = [['beacon', String(beacon.id)], ['active', true]];
             model.query('Special', specialFilter, function cb (err, specials) {
-                if (err) return;
+                if (err) sys.addError(request, err);
                 if (!specials) specials = [];
                 
-                var userFilter = [];
-                model.query('User', userFilter, function cb (err, users) {
-                    if (err) return;
+                model.query3('User', null, function cb (err, users) {
+                    if (err) sys.addError(request, err);
                     if (!users) users = [];
                     
                     // Get display values
@@ -252,15 +349,20 @@ router.get('/:id/edit', (request, response, next) => {
                     var col1 = [], col2 = [];
                     col1.push(sys.getFieldObj(beacon, 'String', 'unique_id', 'Unique ID', true));
                     col1.push(sys.getFieldObj(beacon, 'ForeignKey', 'store', 'Store', !isAdmin, isAdmin, storeOptions, 'Store'));
-                    col1.push(sys.getFieldObj(beacon, 'String', 'alias', 'Alias'));
-                    col1.push(sys.getFieldObj(beacon, 'String', 'uuid', 'UUID', true));
-                    col1.push(sys.getFieldObj(beacon, 'String', 'major', 'Major', true));
-                    col1.push(sys.getFieldObj(beacon, 'String', 'minor', 'Minor', true));
+                    col1.push(sys.getFieldObj(beacon, 'String', 'alias', 'Alias', !canEdit));
+                    col1.push(sys.getFieldObj(beacon, 'Color', 'color', 'Report colour', !canEdit));
+                    col1.push(sys.getFieldObj(beacon, 'String', 'lat', 'Latitude', !canEdit));
+                    col1.push(sys.getFieldObj(beacon, 'String', 'long', 'Longitude', !canEdit));
+                    col1.push(sys.getFieldObj(beacon, 'Boolean', 'active', 'Active', !canEdit));
+                    col2.push(sys.getFieldObj(beacon, 'String', 'uuid', 'UUID', true));
+                    col2.push(sys.getFieldObj(beacon, 'String', 'major', 'Major', true));
+                    col2.push(sys.getFieldObj(beacon, 'String', 'minor', 'Minor', true));
                     col2.push(sys.getFieldObj(beacon, 'ForeignKey', 'created_by', 'Created by', true, false, userOptions, 'User'));
                     col2.push(sys.getFieldObj(beacon, 'DateTime',   'created_on', 'Created on', true));
                     col2.push(sys.getFieldObj(beacon, 'ForeignKey', 'updated_by', 'Updated by', true, false, userOptions, 'User'));
                     col2.push(sys.getFieldObj(beacon, 'DateTime',   'updated_on', 'Updated on', true));
-                    col2.push(sys.getFieldObj(beacon, 'Boolean', 'active', 'Active'));
+                    
+                    var messages = sys.getMessages(request);
                     
                     response.render('beacon-form.pug', {
                         user: {
@@ -276,10 +378,13 @@ router.get('/:id/edit', (request, response, next) => {
                         pageId      : 'beacon',
                         kind        : 'Beacon',
                         isAdmin     : isAdmin,
+                        canEdit     : canEdit,
+                        canDelete   : isAdmin,
                         entity      : beacon,
                         specials    : specials,
                         col1        : col1,
-                        col2        : col2
+                        col2        : col2,
+                        messages    : messages
                     });
                 });
             });
@@ -289,14 +394,15 @@ router.get('/:id/edit', (request, response, next) => {
 
 // POST /beacons/:id/edit
 router.post('/:id/edit', (request, response, next) => {
-    var data = request.body;
-    var id = request.params.id;
+    var data   = request.body;
+    var id     = request.params.id;
     var userId = String(request.session.id);
     
     data.active = Boolean(data.active);
     
     model.update(kind, id, data, userId, (err, savedData) => {
-        if (err) return;
+        if (err) sys.addError(request, err);
+        else sys.addMessage(request, 'Beacon updated');
         
         response.redirect(`${request.baseUrl}/${savedData.id}/edit`);
     });
@@ -311,7 +417,6 @@ router.post('/bulk-update', (request, response, next) => {
     
     var list = data.bulkList ? String(data.bulkList).split(',') : [];
     var len  = list.length;
-    console.log('list: ' + list.join(', '));
     
     var newData = {};
     if (data.store)
@@ -320,18 +425,22 @@ router.post('/bulk-update', (request, response, next) => {
         newData.alias = String(data.alias);
     if (data.active)
         newData.active = data.active == 'true';
-    console.log('newData: ' + JSON.stringify(newData));
     
     for (var i = 0; i < len; i++) {
         model.update(kind, list[i], newData, userId, function cb(err, savedData) {
-            if (i == len-1)
+            if (err) sys.addError(request, err);
+            
+            if (i == len-1) {
+                sys.addMessage(request, len + ' Beacon' + (len==1?'':'s') + ' updated');
                 response.redirect('/beacons'); // beacons list
+            }
         });
     }
+    sys.addMessage(request, len + ' Beacon' + (len==1?'':'s') + ' updated');
     response.redirect('/beacons');
 });
 
-// POST /beacons/bulk-update
+// POST /beacons/bulk-delete
 router.post('/bulk-delete', (request, response, next) => {
     console.log('/bulk-delete');
     var data   = request.body;
@@ -342,11 +451,16 @@ router.post('/bulk-delete', (request, response, next) => {
     console.log('list: ' + list.join(', '));
     
     for (var i = 0; i < len; i++) {
-        model.delete(kind, id, function cb(err) {
-            if (i == len-1)
+        model.delete(kind, list[i], userId, function cb(err) {
+            if (err) sys.addError(request, err);
+            
+            if (i == len-1) {
+                sys.addMessage(request, len + ' Beacon' + (len==1?'':'s') + ' deleted');
                 response.redirect('/beacons'); // beacons list
+            }
         });
     }
+    sys.addMessage(request, len + ' Beacon' + (len==1?'':'s') + ' deleted');
     response.redirect('/beacons');
 });
 
@@ -360,9 +474,12 @@ router.get('/:id', (request, response, next) => {
 // GET /beacons/:id/delete
 router.get('/:id/delete', (request, response, next) => {
     var id = request.params.id;
+    var userId = String(request.session.id);
     
-    model.delete(kind, id, (err) => {
-        if (err) return;
+    model.delete(kind, id, userId, (err) => {
+        if (err) sys.addError(request, err);
+        else sys.addMessage(request, 'Beacon deleted');
+        
         response.redirect(request.baseUrl);
     });
 });
@@ -371,8 +488,24 @@ router.get('/:id/delete', (request, response, next) => {
 router.use((err, request, response, next) => {
     // Format error and forward to generic error handler for logging and
     // responding to the request
-    err.response = err.message;
-    next(err);
+    //err.response = err.message;
+    sys.addError(request, err.message);
+    var messages = sys.getMessages(request);
+    response.status(500).render('500.pug', {
+        user : {
+            id      : String(request.session.id),
+            name    : String(request.session.name),
+            initials: String(request.session.initials),
+            image   : String(request.session.image),
+            role    : String(request.session.role),
+            store   : String(request.session.store),
+            token   : String(request.session.token)
+        },
+        pageTitle   : "iRadar - 500",
+        pageId      : "500",
+        messages    : messages
+    });
+    //next(err);
 });
 
 module.exports = router;

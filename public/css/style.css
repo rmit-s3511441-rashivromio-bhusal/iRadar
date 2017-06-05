@@ -166,7 +166,7 @@ btn-warning .btn-warning {
     background-color: orange;
 }
 #row-counts {
-    width: 200px;
+    width: 250px;
     height: 34px;
     line-height: 34px;
     text-align: right;
@@ -272,6 +272,14 @@ btn-warning .btn-warning {
 .related-list {
     margin-top: 50px;
     margin-bottom: 50px;
+}
+
+.alert {
+    padding: 5px 35px 5px 10px;
+    margin-bottom: 10px;
+}
+.alert-container {
+    margin-bottom: 0px;
 }
 
 /* HOME */

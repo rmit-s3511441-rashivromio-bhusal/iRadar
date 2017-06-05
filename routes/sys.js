@@ -150,5 +150,50 @@ module.exports = {
         return num < 10 ? '0' + num : '' + num;
     },
     
+    addMessage: function(req, msg) {
+        if (!req.session.messages)
+            req.session.messages = [];
+        req.session.messages.push({'msg':String(msg),'type':'info'});
+    },
+    
+    addError: function(req, msg) {
+        if (!req.session.messages)
+            req.session.messages = [];
+        req.session.messages.push({'msg':String(msg),'type':'danger'});
+    },
+    
+    getMessages: function(req) {
+        var messages = [];
+        if (req.session.messages && req.session.messages.length) {
+            for (var i = 0; i < req.session.messages.length; i++)
+                messages.push(req.session.messages[i]);
+        }
+        req.session.messages = [];
+        return messages;
+    },
+    
+    sort: function(objArr, orderBy, desc) {
+        // Sort an array of objects by a given property
+        
+        if (!objArr || objArr.length || objArr.length < 2 || !orderBy)
+            return;
+        
+        if (desc) {
+            // Sort descending
+            objArr.sort(function(a, b) {
+                if (a[orderBy] > b[orderBy]) return -1;
+                if (a[orderBy] < b[orderBy]) return 1;
+                return 0;
+            });
+        } else {
+            // Sort ascending
+            objArr.sort(function(a, b) {
+                if (a[orderBy] < b[orderBy]) return -1;
+                if (a[orderBy] > b[orderBy]) return 1;
+                return 0;
+            });
+        }
+    },
+    
     type: 'sys'
 };

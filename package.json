@@ -8,7 +8,6 @@
     "start": "node app.js"
   },
   "author": "Geoffrey Sage",
-  "license": "Apache Version 2.0",
   "dependencies": {
     "@google-cloud/datastore": "^0.1.1",
     "@google-cloud/storage": "^0.7.0",

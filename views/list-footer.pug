@@ -1,12 +1,13 @@
 // List Footer
 .container.list-footer
-  if bulkFields || canDelete
-    .pull-left(id="cbc-all-div")
-      input(type="checkbox", id="cbc-all", onclick="selectList()")
-  if bulkFields
-    button.btn.btn-warning.pull-left(type="button", data-toggle="modal", data-target="#bulkUpdateModal") Update
-  if canDelete
-    button.btn.btn-danger.pull-left(type="button", data-toggle="modal", data-target="#bulkDeleteModal") Delete
+  if count
+    if bulkFields || canDelete
+      .pull-left(id="cbc-all-div")
+        input(type="checkbox", id="cbc-all", onclick="selectList()")
+    if bulkFields
+      button.btn.btn-warning.pull-left(type="button", data-toggle="modal", data-target="#bulkUpdateModal") Update
+    if canDelete
+      button.btn.btn-danger.pull-left(type="button", data-toggle="modal", data-target="#bulkDeleteModal") Delete
   include list-pagination.pug
   .input-group.pull-right(id="show-rows-group")
     span Show
@@ -28,7 +29,7 @@
       else
         option(value="100") 100
     span rows
-script(src="https://iradar-dev.appspot.com/contextMenus.js")
+script(src="/contextMenus.js")
 
 if bulkFields && bulkFields.length
   .modal.fade(id="bulkUpdateModal", tabindex="-1", role="dialog")

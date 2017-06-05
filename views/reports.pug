@@ -1,14 +1,18 @@
 include header.pug
 
+input(type="text", id="beaconNames", value=beaconNames)
+input(type="text", id="beaconCounts", value=beaconCounts)
+input(type="text", id="monthNames", value=monthNames)
+input(type="text", id="monthCounts", value=monthCounts)
+
 script(type="text/javascript", src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js")
 .container.report
-  h2 Hits Per Special
-  canvas.chartshape(id="irdarlinechart")
-.container.report
-  h2 Hits Per Beacon
+  h2 Hits per Beacon
   canvas.chartshape(id="irdarbarchart")
 .container.report
-  h2 Impressions Report
+  h2 Hits per Month
+  canvas.chartshape(id="irdarlinechart")
+.container.report
+  h2 Hits by Location
   canvas.chartshape(id="irdarbubblechart")
 script(type="text/javascript", src="https://iradar-dev.appspot.com/reports.js")
-  

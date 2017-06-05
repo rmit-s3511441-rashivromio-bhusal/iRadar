@@ -236,14 +236,22 @@ function update2 (id, data, cb) {
 
 function create (kind, data, userId, cb) {
     console.log('INSERT');
-    if (data) {
+    if (!data)
+        data = {};
+    if (!data.created_on)
         data.created_on = sys.getNow();
+    if (!data.created_by)
         data.created_by = userId;
-    }
+    
     update(kind, null, data, userId, cb);
 }
 
-function _delete (kind, id, cb) {
+function _delete (kind, id, userId, cb) {
+    if (!kind || !id || !userId)
+        return false;
+    
+    console.log('DELETE: Key(' + kind + ',' + id + ') by ' + userId);
+    
     const key = ds.key([kind, parseInt(id, 10)]);
     ds.delete(key, cb);
 }
@@ -315,30 +323,17 @@ function query2 (kind, filters, callback) {
     });
 }
 
-function query3 (kind, storeId, orderBy, callback) {
-    console.log('query3()');
-        
+function query3 (kind, storeId, callback) {
+    console.log('query3('+kind+','+storeId+')');
+    
     var query = ds.createQuery(kind);
     
     // Add Store filter for Access Control
     if (storeId) {
         if (kind == 'Store')
             query.filter('id', '=', storeId);
-        else if (kind == 'Beacon' || kind == 'Special' || kind == 'User')
+        else
             query.filter('store', '=', storeId);
-    }
-    
-    // Add Order By
-    if (!orderBy) {
-        query.order('updated_on');
-    } else {
-        orderBy = String(orderBy);
-        if (orderBy.match(/DESC$/) != null) {
-            orderBy = orderBy.replace(/DESC$/, '');
-            query.order(orderBy, { descending: true });
-        } else {
-            query.order(orderBy);
-        }
     }
     
     ds.runQuery(query, function (err, entities, nextQuery) {

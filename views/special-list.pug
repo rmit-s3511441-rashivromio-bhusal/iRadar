@@ -3,16 +3,7 @@ include list-header.pug
 .container.list-view
   .table.table-responsive
     table.table.table-striped.table-bordered
-      tr
-        th.cbc
-        th Name
-        th Proximity
-        th Store
-        th Beacon
-        th Start
-        th End
-        th Active
-        th Updated on
+      include list-th.pug
         
       each special in specials
         tr
@@ -25,9 +16,9 @@ include list-header.pug
             a(href=`/stores/${special.store}/edit`)= special.store_dv
           td.filter(data-filter=`beacon=${special.beacon}`)
             a(href=`/beacons/${special.beacon}/edit`)= special.beacon_dv
-          td.filter(data-filter=`start=${special.start}`)= special.start_dv
-          td.filter(data-filter=`end=${special.end}`)= special.end_dv
+          td.filter-date(data-filter=`start=${special.start}`)= special.start_dv
+          td.filter-date(data-filter=`end=${special.end}`)= special.end_dv
           td.filter(data-filter=`active=${special.active}`)= special.active_dv
-          td.filter(data-filter=`updated_on=${special.updated_on}`)= special.updated_on_dv
+          td.filter-date(data-filter=`updated_on=${special.updated_on}`)= special.updated_on_dv
 
 include list-footer.pug

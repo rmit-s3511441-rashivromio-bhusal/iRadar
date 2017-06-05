@@ -243,8 +243,9 @@ router.get('/:id', (request, response, next) => {
 // GET /stores/:id/delete
 router.get('/:id/delete', (request, response, next) => {
     var id = request.params.id;
+    var userId = String(request.session.id);
     
-    model.delete(kind, id, (err) => {
+    model.delete(kind, id, userId, (err) => {
         if (err) console.log(`/stores/${id}/delete: ${err}`);
         response.redirect(request.baseUrl);
     });

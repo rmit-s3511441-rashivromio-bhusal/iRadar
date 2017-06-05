@@ -38,10 +38,16 @@
       input.form-control(type="text", name=field.name, id=field.name, value=field.value, onchange=`validateURL(\'${field.name}\',\'${field.label}\',${field.isMandatory})`)
 
   if field.type == 'Boolean'
-    if field.value
-      input.form-control(type="checkbox", name=field.name, id=field.name, style="width:34px;margin-top:0px;", checked="checked")
+    if field.isDisabled
+      if field.value
+        input.form-control(type="checkbox", name=field.name, id=field.name, style="width:34px;margin-top:0px;", disabled="disabled", checked="checked")
+      else
+        input.form-control(type="checkbox", name=field.name, id=field.name, style="width:34px;margin-top:0px;", disabled="disabled")
     else
-      input.form-control(type="checkbox", name=field.name, id=field.name, style="width:34px;margin-top:0px;")
+      if field.value
+        input.form-control(type="checkbox", name=field.name, id=field.name, style="width:34px;margin-top:0px;", checked="checked")
+      else
+        input.form-control(type="checkbox", name=field.name, id=field.name, style="width:34px;margin-top:0px;")
   
   if field.type == 'DateTime'
     if field.isDisabled
@@ -85,6 +91,18 @@
         a.btn.btn-secondary(href=field.path, title=`Open ${field.kind}`)
           span(class=`glyphicon glyphicon-${field.icon}`)
 
+  if field.type == 'Color'
+    .input-group
+      if field.isDisabled
+        input.form-control(type="text", name=field.name, id=field.name, value=field.value, disabled="disabled")
+          include input-options.pug
+      else
+        if field.isMandatory
+          input.form-control(type="text", name=field.name, id=field.name, value=field.value, onchange=`validateString(\'${field.name}\',\'${field.label}\')`)
+        else
+          input.form-control(type="text", name=field.name, id=field.name, value=field.value)
+      span.input-group-addon(style="padding:5px 7px;")
+        div(style=`background-color:${field.value}; width: 20px; height: 20px; border-radius: 2px;`)
     
   .alert.alert-danger.fld-msg(id=`${field.name}.msg`)
   
