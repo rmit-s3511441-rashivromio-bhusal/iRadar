@@ -157,7 +157,7 @@ function storeChanges() {
     for (var i = 1; i < beacon.options.length; i++) {
         beacon.options.remove(i);
     }
-    console.log('addin...');
+    console.log('adding...');
     for (var i = 0; i < newBeacons.length; i++) {
         var o = document.createElement("option");
         o.text = String(newBeacons[i].label);

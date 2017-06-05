@@ -1,9 +1,9 @@
 include header.pug
 
-input(type="text", id="beaconNames", value=beaconNames)
-input(type="text", id="beaconCounts", value=beaconCounts)
-input(type="text", id="monthNames", value=monthNames)
-input(type="text", id="monthCounts", value=monthCounts)
+input(type="hidden", id="barChartData", value=barChartData)
+input(type="hidden", id="bubbleDatasets", value=bubbleDatasets)
+input(type="hidden", id="monthNames", value=monthNames)
+input(type="hidden", id="monthCounts", value=monthCounts)
 
 script(type="text/javascript", src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js")
 .container.report

@@ -76,19 +76,38 @@ router.get('/', (request, response, next) => {
                     'backgroundColor': [],
                     'data': []
                 };
+                var bubbleDatasets = [{
+                    'label': '',
+                    'data': [{ x: 0, y: 0, r: 1 },{ x: 60, y: 40, r: 1 }],
+                    'backgroundColor': "#fff"
+                }];
+                
                 for (key in beaconsByUniqueID) {
                     //beaconNames.push(String(key));
                     //beaconCounts.push(Number(countsByBeacon[key]));
                     barChartData.labels.push(String(key));
                     barChartDataSet.backgroundColor.push(String(beaconsByUniqueID[key].color));
                     barChartDataSet.data.push(String(beaconsByUniqueID[key].hits));
+                    bubbleDatasets.push({
+                        'label': String(key),
+                        'data': [{ 
+                            x: Number(beaconsByUniqueID[key].long),
+                            y: Number(beaconsByUniqueID[key].lat),
+                            r: Number(beaconsByUniqueID[key].hits)
+                        }],
+                        'backgroundColor': String(beaconsByUniqueID[key].color)
+                    });
                 }
                 barChartData.datasets = [barChartDataSet];
                 barChartData = JSON.stringify(barChartData);
+                bubbleDatasets = JSON.stringify(bubbleDatasets);
                 
                 //beaconNames = JSON.stringify(beaconNames);
                 //beaconCounts = JSON.stringify(beaconCounts);
 
+                
+                
+                
                 // Hits per month
                 var monthsList = [], countsByMonth = {}, month, monthNames = [], monthCounts = [];
                 var MAX = 6;
@@ -120,7 +139,7 @@ router.get('/', (request, response, next) => {
                 monthNames = JSON.stringify(monthNames);
                 monthCounts = JSON.stringify(monthCounts);
                 
-                // Bubble Chart - Hits by Location
+                /*/ Bubble Chart - Hits by Location
                 {
             label: '',
             data: [{ x: 0, y: 0, r: 1 },{ x: 60, y: 40, r: 1 }],
@@ -129,7 +148,7 @@ router.get('/', (request, response, next) => {
             label: 'Beacon 1',
             data: [{ x: 20, y: 30, r: 15 }],
             backgroundColor: "#66ff66"
-        }
+        }*/
                 
                 var messages = sys.getMessages(request);
 
@@ -146,6 +165,7 @@ router.get('/', (request, response, next) => {
                     pageTitle   : 'iRadar - Reports',
                     pageId      : 'reports',
                     barChartData: barChartData,
+                    bubbleDatasets: bubbleDatasets,
                     monthNames  : monthNames,
                     monthCounts : monthCounts,
                     messages    : messages

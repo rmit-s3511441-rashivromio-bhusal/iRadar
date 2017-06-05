@@ -82,7 +82,8 @@ const BUBBLECHART = document.getElementById("hits-by-location");
 let bubbleChart = new Chart(BUBBLECHART, {
     type: 'bubble',
     data: {
-        datasets: [{
+        datasets: JSON.parse(gel('bubbleDatasets').value)
+        /*[{
             label: '',
             data: [{ x: 0, y: 0, r: 1 },{ x: 60, y: 40, r: 1 }],
             backgroundColor: "#fff"
@@ -105,7 +106,7 @@ let bubbleChart = new Chart(BUBBLECHART, {
             data: [{ x: 32, y: 18, r: 24 }],
             backgroundColor: "#cc66ff",
             hoverBackgroundColor: "#cc66ff"
-        }]
+        }]*/
     },
     options: {
         elements: {

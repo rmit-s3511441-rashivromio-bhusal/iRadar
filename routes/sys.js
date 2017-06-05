@@ -176,7 +176,7 @@ module.exports = {
         // Sort an array of objects by a given property
         
         if (!objArr || objArr.length || objArr.length < 2 || !orderBy)
-            return;
+            return objArr;
         
         if (orderBy.match(/DESC$/) != null) {
             orderBy = orderBy.replace(/DESC$/, '');
@@ -198,11 +198,12 @@ module.exports = {
                 return 0;
             });
         }
+        return objArr;
     },
     
     filter: function(list, query, crumbs, url) {
         if (!query)
-            return;
+            return list;
         
         var filters = query.split('^');
         var i, filter, field, operator, searchValue;
@@ -277,6 +278,7 @@ module.exports = {
             }
             list = filteredList;
         }
+        return list;
     },
     
     type: 'sys'
