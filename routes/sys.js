@@ -178,6 +178,11 @@ module.exports = {
         if (!objArr || objArr.length || objArr.length < 2 || !orderBy)
             return;
         
+        if (orderBy.match(/DESC$/) != null) {
+            orderBy = orderBy.replace(/DESC$/, '');
+            desc = true;
+        }
+        
         if (desc) {
             // Sort descending
             objArr.sort(function(a, b) {
@@ -192,6 +197,85 @@ module.exports = {
                 if (a[orderBy] > b[orderBy]) return 1;
                 return 0;
             });
+        }
+    },
+    
+    filter: function(list, query, crumbs, url) {
+        if (!query)
+            return;
+        
+        var filters = query.split('^');
+        var i, filter, field, operator, searchValue;
+        
+        for (i = 0; i < filters.length; i++) {
+            filter = String(filters[i]);
+
+            // Breadcrumbs
+            if (i != 0)
+                url += '^';
+            url += filter;
+            crumbs.push({
+                'label': String(filter),
+                'url'  : String(url)
+            });
+            
+            // Filters
+            field       = String(filter.match(/^[a-z_]+/i)[0]);
+            operator    = String(filter.match(/(>=|<=|>|<|!\*|=\*|!=|=)/)[0]); // Operators: = != > >= < <= !* =*
+            searchValue = String(filter.match(/[^\=\!\>\<\*]+$/)[0]) || '';
+
+            if (searchValue === 'true')
+                searchValue = true;
+            if (searchValue === 'false')
+                searchValue = false;
+
+            // look through list and push any matching Beacons into filteredList
+            var j, b, entityValue, filteredList = [];
+            for (j = 0; j < list.length; j++) {
+                if (!list[j] || list[j][field] === undefined) {
+                    continue;
+                }
+                entityValue = String(list[j][field]);
+                if (entityValue === 'true')
+                    entityValue = true;
+                if (entityValue === 'false')
+                    entityValue = false;
+
+                if (operator == '>=') {
+                    if (entityValue >= searchValue) {
+                        filteredList.push(list[j]);
+                    }
+                } else if (operator == '<=') {
+                    if (entityValue <= searchValue) {
+                        filteredList.push(list[j]);
+                    }
+                } else if (operator == '>') {
+                    if (entityValue > searchValue) {
+                        filteredList.push(list[j]);
+                    }
+                } else if (operator == '<') {
+                    if (entityValue < searchValue) {
+                        filteredList.push(list[j]);
+                    }
+                } else if (operator == '!*') {
+                    if (entityValue.indexOf(searchValue) == -1) {
+                        filteredList.push(list[j]);
+                    }
+                } else if (operator == '=*') {
+                    if (entityValue.indexOf(searchValue) != -1) {
+                        filteredList.push(list[j]);
+                    }
+                } else if (operator == '!=') {
+                    if (entityValue !== searchValue) {
+                        filteredList.push(list[j]);
+                    }
+                } else if (operator == '=') {
+                    if (entityValue === searchValue) {
+                        filteredList.push(list[j]);
+                    }
+                }
+            }
+            list = filteredList;
         }
     },
     

@@ -109,6 +109,6 @@ if (module === require.main) {
         var port = server.address().port;
         console.log(`App listening on port ${port}`);
     });
-}
+} 
 
 module.exports = app;

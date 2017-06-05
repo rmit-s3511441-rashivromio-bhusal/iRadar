@@ -120,6 +120,9 @@ router.get('/', (request, response, next) => {
             
             if (urlQueries.length > 0)
                 url += '?' + urlQueries.join('&');
+            
+            sys.filter(beaconList, query, crumbs, url);
+            /*
             var filters = query ? query.split('^') : [];
             var filter, field, operator, searchValue;
             
@@ -192,9 +195,10 @@ router.get('/', (request, response, next) => {
                     }
                 }
                 beaconList = filteredList;
-            }
+            }*/
             
-            // Sort
+            sys.sort(beaconList, order);
+            /*/ Sort
             if (order && beaconList.length > 1) {
                 var orderBy = String(order);
                 var isAsc = true;
@@ -215,7 +219,7 @@ router.get('/', (request, response, next) => {
                         return 0;
                     });
                 }
-            }
+            }*/
             
             // Pagination
             // from, to & count = display numbers

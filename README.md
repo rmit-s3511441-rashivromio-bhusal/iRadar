@@ -1,7 +1,11 @@
-# 2 - Structured data
+# iRadar Web Console
 
-This folder contains the sample code for the [Structured data][step-2]
-tutorial. Please refer to the tutorial for instructions on configuring, running,
-and deploying this sample.
+This is the NodeJS application code for the iOS team's iRadar web console.
+It is our solution for the Proximity Beacon PoC proposed by Shine Solutions.
 
-[step-2]: https://cloud.google.com/nodejs/getting-started/using-structured-data
+Authors:
+Geoffrey Sage
+Rashiv Bhusal
+Qinghua Wu 
+Si Si Qin
+Jiameng Xue

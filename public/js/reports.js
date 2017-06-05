@@ -3,9 +3,43 @@ Chart.defaults.global.animation.onComplete = () => {
     //console.log('finished');
 }
 
-const CHART = document.getElementById("irdarlinechart");
+const BARCHART = document.getElementById("hits-per-month");
 
-let lineChart = new Chart(CHART, {
+let barChart = new Chart(BARCHART, {
+    type: 'bar',
+    data: JSON.parse(gel('barChartData').value)
+    /*{
+        labels: JSON.parse(gel('beaconNames').value),
+        datasets: [{
+            label: "Hit per Beacon",
+            backgroundColor: [
+                'rgba(255, 99, 132, 0.8)',
+                'rgba(154, 162, 235, 0.8)',
+                'rgba(255, 206, 86, 0.8)'
+            ],
+            borderColor: [
+                'rgba(255,99,132,1)',
+                'rgba(154, 162, 235, 1)',
+                'rgba(255, 206, 86, 1)'
+            ],
+            borderWidth: 1,
+            data: JSON.parse(gel('beaconCounts').value),
+        }]
+    }*/,
+    options: {
+        scales: {
+            yAxes: [{
+                ticks: {
+                    beginAtZero: true
+                }
+            }]
+        }
+    }
+});
+
+//const CHART = gel("hits-per-beacon");
+
+let lineChart = new Chart(gel("hits-per-beacon"), {
     type: 'line',
     data: {
         labels: JSON.parse(gel('monthNames').value),
@@ -43,83 +77,41 @@ let lineChart = new Chart(CHART, {
     }
 });
 
-const BARCHART = document.getElementById("irdarbarchart");
-
-let barChart = new Chart(BARCHART, {
-    type: 'bar',
-    data: {
-        labels: JSON.parse(gel('beaconNames').value),
-        datasets: [{
-            label: "Hit Per Beacon",
-            backgroundColor: [
-                'rgba(255, 99, 132, 0.8)',
-                'rgba(154, 162, 235, 0.8)',
-                'rgba(255, 206, 86, 0.8)'/*,
-                'rgba(75, 192, 192, 0.8)',
-                'rgba(153, 102, 255, 0.8)',
-                'rgba(255, 159, 64, 0.8)'*/
-            ],
-            borderColor: [
-                'rgba(255,99,132,1)',
-                'rgba(154, 162, 235, 1)',
-                'rgba(255, 206, 86, 1)'/*,
-                'rgba(75, 192, 192, 1)',
-                'rgba(153, 102, 255, 1)',
-                'rgba(255, 159, 64, 1)'*/
-            ],
-            borderWidth: 1,
-            data: JSON.parse(gel('beaconCounts').value),
-        }]
-    },
-    options: {
-        scales: {
-            yAxes: [{
-                ticks: {
-                    beginAtZero: true
-                }
-            }]
-        }
-    }
-});
-
-const BUBBLECHART = document.getElementById("irdarbubblechart");
+const BUBBLECHART = document.getElementById("hits-by-location");
 
 let bubbleChart = new Chart(BUBBLECHART, {
     type: 'bubble',
     data: {
-
         datasets: [{
-            label: 'Total Impressions',
-            data: [{
-                x: 20,
-                y: 30,
-                r: 15
-            },
-                {
-                    x: 40,
-                    y: 10,
-                    r: 10
-                },
-                {
-                    x: 25,
-                    y: 20,
-                    r: 17
-                },
-                {
-                    x: 32,
-                    y: 18,
-                    r: 24
-                }
-            ],
-            backgroundColor: "#FF6384",
-            hoverBackgroundColor: "#FF6384",
+            label: '',
+            data: [{ x: 0, y: 0, r: 1 },{ x: 60, y: 40, r: 1 }],
+            backgroundColor: "#fff"
+        },{
+            label: 'Beacon 1',
+            data: [{ x: 20, y: 30, r: 15 }],
+            backgroundColor: "#66ff66"
+        },{
+            label: 'Beacon 2',
+            data: [{ x: 40, y: 10, r: 10 }],
+            backgroundColor: "#66ccff",
+            hoverBackgroundColor: "#66ccff"
+        },{
+            label: 'Beacon 3',
+            data: [{ x: 25, y: 20, r: 17 }],
+            backgroundColor: "#ff6600",
+            hoverBackgroundColor: "#ff6600"
+        },{
+            label: 'Beacon 4',
+            data: [{ x: 32, y: 18, r: 24 }],
+            backgroundColor: "#cc66ff",
+            hoverBackgroundColor: "#cc66ff"
         }]
     },
     options: {
         elements: {
             points: {
                 borderWidth: 1,
-                borderColor: 'rgb(0, 0, 0)'
+                borderColor: 'rgb(0, 0, 153)'
             }
         }
     }

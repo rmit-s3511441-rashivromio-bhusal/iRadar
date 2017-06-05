@@ -95,7 +95,6 @@
     .input-group
       if field.isDisabled
         input.form-control(type="text", name=field.name, id=field.name, value=field.value, disabled="disabled")
-          include input-options.pug
       else
         if field.isMandatory
           input.form-control(type="text", name=field.name, id=field.name, value=field.value, onchange=`validateString(\'${field.name}\',\'${field.label}\')`)

@@ -52,19 +52,42 @@ router.get('/', (request, response, next) => {
                 sys.sort(beaconList, 'unique_id');
 
                 // Counts by Beacon
-                var i, key, countsByBeacon = {}, beaconNames = [], beaconCounts = [];
+                var i, key, beacon, beaconsByUniqueID = {}, countsByBeacon = {}, beaconNames = [], beaconCounts = [], bubbleChartDataSet = [];
                 for (i = 0; i < beaconList.length; i++) {
-                    countsByBeacon[String(beaconList[i].unique_id)] = 0;
+                    //countsByBeacon[String(beaconList[i].unique_id)] = 0;
+                    beacon = beaconList[i];
+                    beaconsByUniqueID[String(beacon.unique_id)] = {
+                        'hits' : 0,
+                        'lat'  : Number(beacon.lat),
+                        'long' : Number(beacon.long),
+                        'color': String(beacon.color)
+                    };
                 }
                 for (i = 0; i < impressionList.length; i++) {
-                    countsByBeacon[String(impressionList[i].beacon)]++;
+                    //countsByBeacon[String(impressionList[i].beacon)]++;
+                    beaconsByUniqueID[String(impressionList[i].beacon)].hits++;
                 }
-                for (key in countsByBeacon) {
-                    beaconNames.push(String(key));
-                    beaconCounts.push(Number(countsByBeacon[key]));
+                
+                var barChartData = {
+                    'labels'  : []
+                };
+                var barChartDataSet = {
+                    'label': 'Hits per beacon',
+                    'backgroundColor': [],
+                    'data': []
+                };
+                for (key in beaconsByUniqueID) {
+                    //beaconNames.push(String(key));
+                    //beaconCounts.push(Number(countsByBeacon[key]));
+                    barChartData.labels.push(String(key));
+                    barChartDataSet.backgroundColor.push(String(beaconsByUniqueID[key].color));
+                    barChartDataSet.data.push(String(beaconsByUniqueID[key].hits));
                 }
-                beaconNames = JSON.stringify(beaconNames);
-                beaconCounts = JSON.stringify(beaconCounts);
+                barChartData.datasets = [barChartDataSet];
+                barChartData = JSON.stringify(barChartData);
+                
+                //beaconNames = JSON.stringify(beaconNames);
+                //beaconCounts = JSON.stringify(beaconCounts);
 
                 // Hits per month
                 var monthsList = [], countsByMonth = {}, month, monthNames = [], monthCounts = [];
@@ -97,6 +120,16 @@ router.get('/', (request, response, next) => {
                 monthNames = JSON.stringify(monthNames);
                 monthCounts = JSON.stringify(monthCounts);
                 
+                // Bubble Chart - Hits by Location
+                {
+            label: '',
+            data: [{ x: 0, y: 0, r: 1 },{ x: 60, y: 40, r: 1 }],
+            backgroundColor: "#fff"
+        },{
+            label: 'Beacon 1',
+            data: [{ x: 20, y: 30, r: 15 }],
+            backgroundColor: "#66ff66"
+        }
                 
                 var messages = sys.getMessages(request);
 
@@ -112,8 +145,7 @@ router.get('/', (request, response, next) => {
                     },
                     pageTitle   : 'iRadar - Reports',
                     pageId      : 'reports',
-                    beaconNames : beaconNames,
-                    beaconCounts: beaconCounts,
+                    barChartData: barChartData,
                     monthNames  : monthNames,
                     monthCounts : monthCounts,
                     messages    : messages
