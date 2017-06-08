@@ -1,8 +1,8 @@
+/* Uses BootstrapMenu.js to implement a context menu on table data elements in the list views.
+   The items in the menu add different filter parameters to the URL for refining search results */
+
+/* Provides basic 'equivalent' and 'not equivalent' filters for String fields */
 var menu = new BootstrapMenu('.filter', {
-  /* a function to know which row was the context menu opened on,
-   * given the selected DOM element. When this function is defined,
-   * every user-defined action callback receives its return value as
-   * an argument. */
     fetchElementData: function($td) {
         return String($td.data('filter'));
     },
@@ -19,11 +19,8 @@ var menu = new BootstrapMenu('.filter', {
     }]
 });
 
+/* Provides various filters for filtering date/time fields */
 var dateMenu = new BootstrapMenu('.filter-date', {
-  /* a function to know which row was the context menu opened on,
-   * given the selected DOM element. When this function is defined,
-   * every user-defined action callback receives its return value as
-   * an argument. */
     fetchElementData: function($td) {
         return String($td.data('filter'));
     },

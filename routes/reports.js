@@ -51,6 +51,8 @@ router.get('/', (request, response, next) => {
 
                 sys.sort(beaconList, 'unique_id');
 
+                // Generate datasets for Charts.JS
+                
                 // Counts by Beacon
                 var i, key, beacon, beaconsByUniqueID = {}, countsByBeacon = {}, beaconNames = [], beaconCounts = [], bubbleChartDataSet = [];
                 for (i = 0; i < beaconList.length; i++) {
@@ -102,12 +104,6 @@ router.get('/', (request, response, next) => {
                 barChartData = JSON.stringify(barChartData);
                 bubbleDatasets = JSON.stringify(bubbleDatasets);
                 
-                //beaconNames = JSON.stringify(beaconNames);
-                //beaconCounts = JSON.stringify(beaconCounts);
-
-                
-                
-                
                 // Hits per month
                 var monthsList = [], countsByMonth = {}, month, monthNames = [], monthCounts = [];
                 var MAX = 6;
@@ -139,16 +135,6 @@ router.get('/', (request, response, next) => {
                 monthNames = JSON.stringify(monthNames);
                 monthCounts = JSON.stringify(monthCounts);
                 
-                /*/ Bubble Chart - Hits by Location
-                {
-            label: '',
-            data: [{ x: 0, y: 0, r: 1 },{ x: 60, y: 40, r: 1 }],
-            backgroundColor: "#fff"
-        },{
-            label: 'Beacon 1',
-            data: [{ x: 20, y: 30, r: 15 }],
-            backgroundColor: "#66ff66"
-        }*/
                 
                 var messages = sys.getMessages(request);
 

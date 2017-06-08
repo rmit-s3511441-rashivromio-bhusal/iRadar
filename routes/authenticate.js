@@ -1,3 +1,5 @@
+// Module for checking username and password at login
+
 const expressJWT = require('express-jwt');
 const jwt        = require('jsonwebtoken');
 const config     = require('./config');
@@ -31,6 +33,7 @@ router.get('/', (request, response) => {
         }
     }
     
+    // Check all inputs are present
     if (!username || !password) {
         response.status(401).json({
             "authenticated": false,
@@ -39,15 +42,9 @@ router.get('/', (request, response) => {
         return;
     }
     
+    // Query the database for the User record
     var filters = [['active', true],['user_name', username]];
     model.query('User', filters, function callback (err, entities) {
-        console.log('callback('+err+', '+entities+')');
-        try {
-            console.log('entities: ' + JSON.stringify(entities));
-        } catch (ex) {
-            console.log(ex);
-        }
-        
         if (err) {
             console.error('runQuery error: ' + err);
             return;
@@ -66,15 +63,6 @@ router.get('/', (request, response) => {
             request.session = null;
             return;
         }
-        
-        /*
-        bcrypt.cryptPassword(password, function(err, hash) {
-            if (err)
-                console.log('cryptPassword error: ' + err);
-            else
-                console.log('hash: ' + hash);
-        });
-        */
         
         if (user.locked_out) {
             response.status(401).json({
@@ -96,9 +84,8 @@ router.get('/', (request, response) => {
             return;
         }
         
+        // Check the password with the hask stored in the database
         bcrypt.comparePassword(password, user.password, function(err, isPasswordMatch) {
-        //var err = false, isPasswordMatch = true;
-        
             if (err) {
                 console.error('comparePassword error: ' + err);
                 return;
@@ -114,12 +101,11 @@ router.get('/', (request, response) => {
                     "expiresIn": "12h"
                 };
                 var token = jwt.sign(payload, config.tokenSecret, options);
-                //console.log('token: ' + token);
                 
                 if (!request.session) {
                     request.session = {};
                 }
-                
+                // Set the session variables
                 request.session.id       = Number(user.id);
                 request.session.name     = user.first_name + ' ' + user.last_name;
                 request.session.initials = String(user.first_name.charAt(0) + user.last_name.charAt(0));
@@ -128,13 +114,14 @@ router.get('/', (request, response) => {
                 request.session.role     = String(user.role);
                 request.session.store    = String(user.store);
                 
+                // Success response
                 response.status(200).json({
                     "authenticated": true,
                     "token": token
                 });
                 
+                // record login
                 var data = { last_login: String(sys.getNow()) };
-                
                 model.update('User', user.id, data, user.id, function(err, entity) {
                     // noop
                 });

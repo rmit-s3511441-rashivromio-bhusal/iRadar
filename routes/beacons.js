@@ -1,3 +1,5 @@
+// CRUD methods for Beacons
+
 const kind       = 'Beacon';
 const config     = require('./config');
 const model      = require('./model');
@@ -76,11 +78,13 @@ router.get('/', (request, response, next) => {
                 {'name':'minor',    'label':'Minor'}
             ];
             
+            // Define Select Options
             var activeOptions = [
                 {'label':'Yes','value':'true'},
                 {'label':'No', 'value':'false'}
             ];
             
+            // List headers
             var headers = [
                 {'name':'unique_id','label':'Unique ID'},
                 {'name':'alias','label':'Alias'},
@@ -92,6 +96,7 @@ router.get('/', (request, response, next) => {
                 {'name':'updated_on','label':'Updated on'}
             ];
             
+            // Fields used on the Bulk Update modal
             var bulkFields = [];
             if (isAdmin)
                 bulkFields.push(sys.getFieldObj({}, 'ForeignKey', 'store', 'Store', false, false, storeOptions, 'Store'));

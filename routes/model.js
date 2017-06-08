@@ -1,3 +1,6 @@
+// Data model functions
+// All functions for interacting with the Datastore are confined to this module
+
 const sys       = require('./sys');
 const Datastore = require('@google-cloud/datastore');
 const config    = require('./config');
@@ -88,6 +91,7 @@ function list (kind, limit, orderBy, token, cb) {
     });
 }
 
+// Read a specific entity by its Key
 function read (kind, id, cb) {
     const key = ds.key([kind, parseInt(id, 10)]);
     ds.get(key, (err, entity) => {
@@ -154,17 +158,6 @@ function update (kind, id, newData, userId, cb) {
             
             for (var prop in newData) {
                 if (currentData[prop] != newData[prop]) {
-                    /*/ log change
-                    if (prop != 'created_on' && prop != 'created_by' && prop != 'updated_on' && prop != 'updated_by') {
-                        create('Audit', {
-                            'kind'     : String(kind),
-                            'key'      : String(id),
-                            'property' : String(prop),
-                            'user'     : String(userId),
-                            'new_value': String(newData[prop]),
-                            'old_value': String(currentData[prop])
-                        }, userId);
-                    }*/
                     currentData[prop] = newData[prop];
                 }
             }
@@ -179,7 +172,7 @@ function update (kind, id, newData, userId, cb) {
                 key: key,
                 data: toDatastore(currentData, nonIndexedFields)
             };
-            //console.log('entity: '+JSON.stringify(entity)+')');
+            
             ds.save(entity, (err) => {
                 if (err) {
                     if (cb) {
@@ -212,28 +205,7 @@ function update (kind, id, newData, userId, cb) {
     }
 }
 
-/*
-function update2 (id, data, cb) {
-  let key;
-  if (id) {
-    key = ds.key([kind, parseInt(id, 10)]);
-  } else {
-    key = ds.key(kind);
-  }
-
-  const entity = {
-    key: key,
-    data: toDatastore(data, ['description'])
-  };
-
-  ds.save( entity, (err) => {
-      data.id = entity.key.id;
-      cb(err, err ? null : data);
-    }
-  );
-}
-*/
-
+// Create a new Entity
 function create (kind, data, userId, cb) {
     console.log('INSERT');
     if (!data)
@@ -246,6 +218,7 @@ function create (kind, data, userId, cb) {
     update(kind, null, data, userId, cb);
 }
 
+// Delete an Entity
 function _delete (kind, id, userId, cb) {
     if (!kind || !id || !userId)
         return false;
@@ -256,6 +229,7 @@ function _delete (kind, id, userId, cb) {
     ds.delete(key, cb);
 }
 
+// Find a single entity by a unique value
 function get (kind, property, value, callback) {
     if (!kind || !property || !callback) {
         console.log('get parameters incomplete');
@@ -277,6 +251,7 @@ function get (kind, property, value, callback) {
     });
 }
 
+// Basic query method - accepts an array of equivelence filters
 function query (kind, filters, callback) {
     console.log('query('+kind+', '+filters+')');
     var query = ds.createQuery(kind);
@@ -298,6 +273,7 @@ function query (kind, filters, callback) {
     });
 }
 
+// Query method - accepts an array of filters with varying operators
 function query2 (kind, filters, callback) {
     console.log('query2()');
     var query = ds.createQuery(kind);
@@ -308,7 +284,6 @@ function query2 (kind, filters, callback) {
         var value    = filters[i][2];
         
         query.filter(field, operator, value);
-        console.log('query.filter('+field+operator+value+')');
     }
     
     ds.runQuery(query, function (err, entities, nextQuery) {
@@ -323,6 +298,7 @@ function query2 (kind, filters, callback) {
     });
 }
 
+// Query method for getting all entities of a Kind - restricted by the Store Access Control
 function query3 (kind, storeId, callback) {
     console.log('query3('+kind+','+storeId+')');
     

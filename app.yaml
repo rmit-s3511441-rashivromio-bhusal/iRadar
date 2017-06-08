@@ -1,5 +1,4 @@
-# Copyright 2015-2016, Google, Inc.
-#
+# Google Cloud Platform file for specifying the App Engine
 runtime: nodejs
 env: flex
 

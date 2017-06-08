@@ -1,7 +1,11 @@
+// This module contains common functions used by all other modules
 module.exports = {
     
+    // Called by routers for each form
+    // @return an Object for an input to be used by input.pug
     getFieldObj: function(entity, type, name, label, isDisabled, isMandatory, options, foreignKind) {
         
+        // reference field Icons
         var glyphicons = {
             'User'  : 'user',
             'Store' : 'home',
@@ -33,6 +37,8 @@ module.exports = {
         return obj;
     },
     
+    // Get the current date and time in AEST
+    // @return date/time string in "yyyy-MM-dd HH:mm:ss" format
     getNow: function () {
         var date = new Date();
         date.setTime(date.getTime() + 36000000); // add 10 hours for AEST
@@ -47,6 +53,9 @@ module.exports = {
         return year+'-'+month+'-'+day+' '+hour+':'+min+':'+sec;
     },
     
+    // Convert a date/time string to "dd-MM-yyyy HH:mm:ss" format - the common display format for all date-time fields
+    // @input a date/time string in "yyyy-MM-dd HH:mm:ss" format
+    // @return a date/time string in "dd-MM-yyyy HH:mm:ss" format
     getDisplayValue(dateStr) {
         if (!dateStr)
             return '';
@@ -63,6 +72,9 @@ module.exports = {
         return date + time; // + this.getTimeAgo(dateStr);
     },
     
+    // Convert a date/time string to "yyyy-MM-dd HH:mm:ss" format - The format dates are stored in the database to enable sorting
+    // @input a date/time string in "dd-MM-yyyy HH:mm:ss" format
+    // @return a date/time string in "yyyy-MM-dd HH:mm:ss" format
     getValue(dateStr) {
         if (!dateStr)
             return '';
@@ -79,13 +91,16 @@ module.exports = {
         return date + time;
     },
     
+    // Get a descriptive string for the relative time since the given date
+    // @input date string
+    // @return string
     getTimeAgo: function(dateStr) {
         var date;
         try {
             date = new Date(dateStr);
         } catch (ex) { }
         if (!date)
-            return;
+            return '';
         
         var now = new Date(this.getNow());
         
@@ -146,22 +161,27 @@ module.exports = {
         return str;
     },
     
+    // Pad a number to 2 digits
     pad2: function(num) {
         return num < 10 ? '0' + num : '' + num;
     },
     
+    // Add a message to the stack stored in the user's session
     addMessage: function(req, msg) {
         if (!req.session.messages)
             req.session.messages = [];
         req.session.messages.push({'msg':String(msg),'type':'info'});
     },
     
+    // Add an error message to the stack stored in the user's session
     addError: function(req, msg) {
         if (!req.session.messages)
             req.session.messages = [];
         req.session.messages.push({'msg':String(msg),'type':'danger'});
     },
     
+    
+    // Get all the messages stored in the stack in the user's session, and clear the stack
     getMessages: function(req) {
         var messages = [];
         if (req.session.messages && req.session.messages.length) {
@@ -172,8 +192,10 @@ module.exports = {
         return messages;
     },
     
+    // Sort an array of objects by a given property
+    // @input unsorted array of objects, property name (string), boolean to indicate descending order (optional)
+    // @return sorted array of objects
     sort: function(objArr, orderBy, desc) {
-        // Sort an array of objects by a given property
         
         if (!objArr || objArr.length || objArr.length < 2 || !orderBy)
             return objArr;
@@ -201,6 +223,7 @@ module.exports = {
         return objArr;
     },
     
+    // filter an array of objects with an encoded query string
     filter: function(list, query, crumbs, url) {
         if (!query)
             return list;

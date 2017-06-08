@@ -1,3 +1,4 @@
+/*  */
 function listSelectorToggled() {
     var allChecked = true;
     var listSelectors = document.getElementsByClassName('list-selector');

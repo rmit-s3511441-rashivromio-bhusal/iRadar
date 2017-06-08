@@ -1,3 +1,5 @@
+// Static config settings
+
 var oneHour = 360000; // ms
 
 module.exports = {

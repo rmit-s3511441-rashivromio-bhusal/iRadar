@@ -1,3 +1,6 @@
+/* These functions are used for client-side validation of form inputs */
+
+// Convenience functions
 function gel(id) {
     return document.getElementById(id);
 }
@@ -6,6 +9,7 @@ function log(str) {
     window.console.log('%c' + str, 'color:blue;');
 }
 
+// Remove error messages from an element
 function clearError(id) {
     gel(id+'.group').classList.remove('has-error');
     var msg = gel(id+'.msg');
@@ -13,6 +17,7 @@ function clearError(id) {
     msg.style.display = 'none';
 }
 
+// Add an error message to an element
 function addError(id, str) {
     gel(id+'.group').classList.add('has-error');
     var msg = gel(id+'.msg');
@@ -20,6 +25,7 @@ function addError(id, str) {
     msg.style.display = 'block';
 }
 
+// Check that a string field is not empty (or only has white space)
 function validateString(id, label) {
     var str = gel(id).value.trim();
     if (str == '') {
@@ -30,6 +36,7 @@ function validateString(id, label) {
     return true;
 }
 
+// Verify a URL
 function validateURL(id, label, required) {
     clearError(id);
     var url = gel(id).value.trim();
@@ -48,6 +55,7 @@ function validateURL(id, label, required) {
     return true;
 }
 
+// Verify a name
 function validateName(id, label) {
     clearError(id);
     var name = gel(id).value.trim();
@@ -63,6 +71,7 @@ function validateName(id, label) {
     return true;
 }
 
+// Verify a username
 function validateUsername(id, label) {
     clearError(id);
     var name = gel(id).value.trim();
@@ -81,6 +90,7 @@ function validateUsername(id, label) {
     return true;
 }
 
+// Verify an email address
 function validateEmail(id, label) {
     clearError(id);
     var name = gel(id).value.trim();
@@ -96,6 +106,7 @@ function validateEmail(id, label) {
     return true;
 }
 
+// Verify a password
 function validatePassword() {
     var id = 'password';
     clearError(id);
@@ -112,6 +123,7 @@ function validatePassword() {
     return true;
 }
 
+// Check all the mandatory inputs on the Special page
 function validateSpecial() {
     var f1 = validateString('name','Name');
     var f2 = validateString('proximity','Proximity');
@@ -124,6 +136,7 @@ function validateSpecial() {
     return f1 && f2 && f3 && f4 && f5 && f6 && f7;
 }
 
+// Check all the mandatory inputs on the User page
 function validateUser() {
     var f1 = validateName('first_name','First name');
     var f2 = validateName('last_name','Last name');
@@ -139,30 +152,31 @@ function validateUser() {
     return f1 && f2 && f3 && f4 && f5 && f6 && f7 && f8;
 }
 
+// Check all the mandatory inputs on the Beacon page
 function validateBeacon() {
     var f1 = validateString('store','Store');
     
     return f1;
 }
 
+// Used on the Special page - When the Store changes, update the list of Beacons
 function storeChanges() {
-    console.log('storeChanges()');
+    
     var storeId = String(gel('store').value);
     var json = String(gel('storeBeacons').value);
     var storeBeacons = JSON.parse(json);
     var newBeacons = storeBeacons[storeId];
     var beacon = gel('beacon');
-    console.log('clearing...');
+    
     // Clear all existing options
     for (var i = 1; i < beacon.options.length; i++) {
         beacon.options.remove(i);
     }
-    console.log('adding...');
+    
     for (var i = 0; i < newBeacons.length; i++) {
         var o = document.createElement("option");
         o.text = String(newBeacons[i].label);
         o.value = String(newBeacons[i].value);
         beacon.options.add(o, i+1);
     }
-    console.log('done!');
 }

@@ -1,3 +1,5 @@
+// Reusable module for all API methods
+
 module.exports = function (kind, orderBy) {
     
     const bodyParser = require('body-parser');

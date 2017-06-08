@@ -1,3 +1,4 @@
+// First module called by the application
 const path          = require('path');
 const cookieSession = require('cookie-session')
 const helmet        = require('helmet');
@@ -6,8 +7,10 @@ const express       = require('express');
 const app           = express();
 
 app.disable('etag'); // Disable HTTP ETag
+
+// Set the rendering engine
 app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'pug');
+app.set('view engine', 'pug'); 
 app.set('trust proxy', true);
 
 // Static content
@@ -18,18 +21,20 @@ app.use(express.static('public/js'));
 
 app.use(helmet()); // Express security best practice
 
+// Initialise the cookie-session library
 app.use(cookieSession({
     name: String(config.cookie.name),
     keys: [String(config.cookie.key)],
     maxAge: Number(config.cookie.maxAge),
 }));
 
+// Update the session on each request to get the session alive
 app.use(function (request, response, next) {
-    // Update the session on each request to get the session alive
     request.session.nowInMinutes = Date.now() / 60e3; // Only update once per minute
     next();
 });
 
+// Route to other modules
 app.use('/api',          require('./routes/api-router'));
 app.use('/beacons',      require('./routes/beacons'));
 app.use('/specials',     require('./routes/specials'));
@@ -44,6 +49,7 @@ app.get('/', (request, response) => {
     response.redirect('/home');
 });
 
+// Render the Home page
 app.get('/home', (request, response) => {
     console.log('/home');
     
@@ -67,10 +73,12 @@ app.get('/home', (request, response) => {
     }
 });
 
+// Render the login page
 app.get('/login', (request, response) => {
     response.render('login.pug');
 });
 
+// Logout - clear the session and redirect to the login page
 app.get('/logout', (request, response) => {
     request.session = null;
     response.redirect('/login');
@@ -102,8 +110,8 @@ app.use((err, request, response, next) => {
     response.status(500).send(err.response || '<p>Something broke!</p><p>Possibly pug could not render the .pug file. Try debugging the template.</p>');
 });
 
+// Start the server
 if (module === require.main) {
-    // Start the server
     var PORT = process.env.PORT || 8080;
     var server = app.listen(PORT, () => {
         var port = server.address().port;

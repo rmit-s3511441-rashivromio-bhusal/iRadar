@@ -1,5 +1,7 @@
+// Password operations
 const bcrypt = require('bcrypt');
 
+// Encrypt a password (one-way) and return the hash
 exports.cryptPassword = function(password, callback) {
     var saltRounds = 10;
     
@@ -13,6 +15,7 @@ exports.cryptPassword = function(password, callback) {
     });
 };
 
+// Take a plain text (potential) password, encrypt it, and compare it to the stored hash
 exports.comparePassword = function(password, userPassword, callback) {
     bcrypt.compare(password, userPassword, function(err, isPasswordMatch) {
         if (err) {

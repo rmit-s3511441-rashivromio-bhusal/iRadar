@@ -1,3 +1,5 @@
+// CRUD methods for Users
+
 const kind       = 'User';
 const config     = require('./config');
 const model      = require('./model');
@@ -6,6 +8,7 @@ const bcrypt     = require('./bcrypt');
 const fs         = require('fs');
 const bodyParser = require('body-parser');
 
+// Libraries for image hosting
 const format     = require('util').format;
 const Multer     = require('multer');
 const multer     = Multer({
@@ -62,6 +65,7 @@ router.get('/', (request, response, next) => {
             if (err) sys.addError(request, err);
             if (!storeList) storeList = [];
             
+            // Get display names and select Options
             var store, storeNames = {}, storeOptions = [];
             for (var i = 0; i < storeList.length; i++) {
                 store = storeList[i];
@@ -81,11 +85,13 @@ router.get('/', (request, response, next) => {
                 user.updated_on_dv = sys.getDisplayValue(user.updated_on);
             }
             
+            // Define Select Options
             var activeOptions = [
                 {'label':'Yes','value':'true'},
                 {'label':'No', 'value':'false'}
             ];
 
+            // List headers
             var headers = [
                 {'name':'user_name', 'label':'Username'},
                 {'name':'first_name', 'label':'First name'},
@@ -97,17 +103,20 @@ router.get('/', (request, response, next) => {
                 {'name':'updated_on', 'label':'Updated on'}
             ];
             
+            // Search fields
             var searchFields = [];
             searchFields.push({'name':'user_name', 'label':'Username'});
             searchFields.push({'name':'first_name','label':'First name'});
             searchFields.push({'name':'last_name', 'label':'Last name'});
             searchFields.push({'name':'email',     'label':'Email'});
 
+            // fields that appear in the Bulk Update Modal
             var bulkFields = [];
             if (isAdmin)
                 bulkFields.push(sys.getFieldObj({}, 'ForeignKey', 'store', 'Store', false, false, storeOptions, 'Store'));
             if (isManager)
                 bulkFields.push(sys.getFieldObj({}, 'Select', 'active', 'Active', false, false, activeOptions));
+            
             
             // Datastore has very limited query functionality - so we'll filter via our own script here
             var urlQueries = [], crumbs = [];
@@ -335,6 +344,7 @@ router.get('/add', (request, response) => {
                 });
             }
             
+            // Get options for User field
             var u, userOptions = [];
             for (var i = 0; i < userList.length; i++) {
                 u = userList[i];
@@ -407,12 +417,11 @@ router.post('/add', (request, response, next) => {
     if (!data.store)
         data.store = userStore;
     
+    // If a new password is set, encrypt it
     if (data.password) {
-        console.log('password: ' + data.password);
         bcrypt.cryptPassword(String(data.password), function(err, hash) {
             if (err) sys.addError(request, err);
             
-            console.log('hash: ' + hash);
             data.password = String(hash);
             model.create(kind, data, userId, (err, savedData) => {
                 if (err) sys.addError(request, err);
@@ -464,6 +473,7 @@ router.get('/:id/edit', (request, response, next) => {
                     });
                 }
                 
+                // Get options for User field
                 var u, userOptions = [];
                 for (var i = 0; i < userList.length; i++) {
                     u = userList[i];
@@ -473,6 +483,8 @@ router.get('/:id/edit', (request, response, next) => {
                     });
                 }
                 
+                
+                // Role select Options
                 var roleOptions = [
                     {'label':'Employee','value':'employee'},
                     {'label':'Manager', 'value':'manager'},

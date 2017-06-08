@@ -1,3 +1,5 @@
+// CRUD methods for Impressions
+
 const kind       = 'Impression';
 const config     = require('./config');
 const model      = require('./model');
@@ -67,7 +69,8 @@ router.get('/', (request, response, next) => {
                     impression.special_dv    = specialNames[impression.special] || '(deleted)';
                     impression.created_on_dv = sys.getDisplayValue(impression.created_on);
                 }
-
+                
+                // List headers
                 var headers = [
                     {'name':'created_on','label':'Created on'},
                     {'name':'store_dv','label':'Store'},
@@ -76,6 +79,7 @@ router.get('/', (request, response, next) => {
                     {'name':'customer','label':'Customer'}
                 ];
 
+                // Fields that can be searched by the Search bar
                 var searchFields = [];
                 searchFields.push({'name':'created_on',  'label':'Created on'});
                 searchFields.push({'name':'beacon',  'label':'Beacon'});

@@ -1,3 +1,5 @@
+// Router for all standard API endpoints
+
 const jwt     = require('jsonwebtoken');
 const config  = require('./config');
 const express = require('express');
@@ -9,7 +11,7 @@ router.use((request, response, next) => {
     next();
 }); 
 
-// Set Content-Type for all responses for these routes
+// Check Authorisation before doing anything else
 router.use((request, response, next) => {
     console.log('/api');
     var token = request.get('Authorization');
@@ -39,7 +41,7 @@ router.use((request, response, next) => {
     }
 }); 
 
-
+// Redirect the different end-points
 router.use('/beacon',     require('./api-methods')('Beacon', 'unique_id'));
 router.use('/special',    require('./api-methods')('Special', 'name'));
 router.use('/store',      require('./api-methods')('Store', 'name'));

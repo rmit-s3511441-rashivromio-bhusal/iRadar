@@ -1,3 +1,5 @@
+// CRUD methods for Specials
+
 const kind       = 'Special';
 const config     = require('./config');
 const model      = require('./model');
@@ -61,6 +63,7 @@ router.get('/', (request, response, next) => {
                     });
                 }
                 
+                // Get a list of display names and Select Options for the Beacons
                 var beacon, beaconNames = {}, beaconOptions = [];
                 for (var i = 0; i < beaconList.length; i++) {
                     beacon = beaconList[i];
@@ -71,6 +74,7 @@ router.get('/', (request, response, next) => {
                     });
                 }
                 
+                // Set display values
                 var special;
                 for (var i = 0; i < specialList.length; i++) {
                     special = specialList[i];
@@ -82,6 +86,7 @@ router.get('/', (request, response, next) => {
                     special.end_dv        = sys.getDisplayValue(special.end);
                 }
                 
+                // Define Select Options
                 var proxiOptions = [
                     {'label':'IMMEDIATE','value':'IMMEDIATE'},
                     {'label':'NEAR',     'value':'NEAR'},
@@ -92,6 +97,7 @@ router.get('/', (request, response, next) => {
                     {'label':'No', 'value':'false'}
                 ];
                 
+                // List headers
                 var headers = [
                     {'name':'name','label':'Name'},
                     {'name':'proximity','label':'Proximity'},
@@ -103,12 +109,14 @@ router.get('/', (request, response, next) => {
                     {'name':'updated_on','label':'Updated on'}
                 ];
                 
+                // Fields that can be searched by the Search bar
                 var searchFields = [];
                 searchFields.push({'name':'name',  'label':'Name'});
                 searchFields.push({'name':'proximity','label':'Proximity'});
                 searchFields.push({'name':'start','label':'Start'});
                 searchFields.push({'name':'end','label':'End'});
                 
+                // Fields that appear on the bulk update modal
                 var bulkFields = [];
                 if (isAdmin)
                     bulkFields.push(sys.getFieldObj({}, 'ForeignKey', 'store', 'Store', false, false, storeOptions, 'Store'));

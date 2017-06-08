@@ -1,3 +1,5 @@
+// CRUD methods for Stores
+
 const express    = require('express');
 const router     = express.Router();
 const kind       = 'Store';
@@ -31,6 +33,7 @@ router.get('/', (request, response, next) => {
         if (err) return;
         if (!stores) stores = [];
         
+        // Set display values
         var i, store;
         for (i = 0; i < stores.length; i++) {
             store = stores[i];
@@ -39,6 +42,7 @@ router.get('/', (request, response, next) => {
             store.updated_on_dv  = sys.getDisplayValue(store.updated_on);
         }
         
+        // Fields that can be searched by the Search bar
         var searchFields = [];
         searchFields.push({'name':'name',       'label':'Name'});
         searchFields.push({'name':'description','label':'Description'});
@@ -78,6 +82,7 @@ router.get('/add', (request, response) => {
         active: true
     };
     
+    // Select Options
     var stateOptions = [
         {'label':'NSW','value':'NSW'},
         {'label':'VIC','value':'VIC'},
@@ -168,6 +173,7 @@ router.get('/:id/edit', (request, response, next) => {
                         storeUsers.push(users[i]);
                 }
                 
+                // Select Options
                 var stateOptions = [
                     {'label':'NSW','value':'NSW'},
                     {'label':'VIC','value':'VIC'},

@@ -1,8 +1,10 @@
+// Router for /api/beacon-specials
+
 const bodyParser = require('body-parser');
 const express    = require('express');
 const router     = express.Router();
 const model      = require('./model');
-const userId     = '5692462144159744'; // Rashiv
+const userId     = '5692462144159744'; // admin
 const sys        = require('./sys');
 
 router.use(bodyParser.json());
@@ -13,6 +15,7 @@ router.get('/', (request, response, next) => {
     var major = request.query.major ? String(request.query.major) : null;
     var minor = request.query.minor ? String(request.query.minor) : null;
     
+    // Required parameters are missing
     if (!major || !minor) {
         response.status(400).json({
             "error": "'major' and 'minor' query parameters must be present.",
@@ -31,6 +34,7 @@ router.get('/', (request, response, next) => {
             return;
         }
         
+        // No Beacon found
         if (!beacons || !beacons[0]) {
             response.status(401).json({
                 "error": "No Beacon found",
@@ -43,7 +47,6 @@ router.get('/', (request, response, next) => {
         var uniqueId = String(beacons[0].unique_id);
         
         // Look up the Specials - Cannot have filters one start and end dates
-        // Error: Cannot have inequality filters on multiple properties: [end, start]
         var specialFilters = [['beacon','=',beaconId],['active','=',true]];
         model.query2('Special', specialFilters, function cb (err, specials) {
             if (err) {
@@ -56,8 +59,8 @@ router.get('/', (request, response, next) => {
             
             var now = sys.getNow();
             
+            // Check each of the Specials
             var list = [], count = Number(specials.length), special;
-            console.log('count: ' + count);
             for (var i = 0; i < count; i++) {
                 special = specials[i];
                 // Check date range
@@ -71,8 +74,8 @@ router.get('/', (request, response, next) => {
                     });
                 }
             }
-            console.log('list: ' + JSON.stringify(list));
             
+            // Success response
             response.status(200).json({
                 "specials": list,
                 "count"   : Number(list.length),
